@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Norns Emulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&family=Silkscreen&display=swap">
+<style>
+:root{
+  /* layout: hardware + controllers on the left, maiden-style editor / library on the right; stacks on phones */
+  --ground:#141517;
+  --ground-2:#1b1c1f;
+  --ground-3:#0f1012;
+  --alu-hi:#3b3e43;
+  --alu-lo:#232529;
+  --ink:#dfe2dc;
+  --muted:#8d918a;
+  --line:#2d2f33;
+  --line-2:#44474c;
+  --oled:#eaf2ff;
+  --led:#f4b13e;
+  --pad:#26272b;
+  --err:#ff8a73;
+  --ok:#a6d49f;
+  --f-ui:"IBM Plex Sans JP", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.55}
+*{box-sizing:border-box}
+.wrap{max-width:1360px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:flex;flex-direction:column;gap:20px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.logo{font-family:var(--f-mono);font-weight:500;font-size:26px;letter-spacing:.02em}
+.sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.status{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.status.run i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.status.err i{background:var(--err)}
+.layout{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:1080px){.layout{grid-template-columns:minmax(0,1fr)}}
+.rig,.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* device */
+.device{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 236px;gap:22px;padding:22px;border-radius:14px;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),linear-gradient(160deg,var(--alu-hi),var(--alu-lo) 70%);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 -1px 0 rgba(0,0,0,.4) inset,0 18px 40px rgba(0,0,0,.45)}
+.screen-well{position:relative;background:#050506;border-radius:6px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,.7) inset,0 1px 0 rgba(255,255,255,.06)}
+#oled{display:block;width:100%;max-width:100%;aspect-ratio:2/1;background:#000;image-rendering:pixelated}
+.tag{position:absolute;font-family:var(--f-mono);font-size:11px;letter-spacing:.04em;padding:3px 8px;border-radius:3px;pointer-events:none}
+.audio-hint{right:18px;bottom:18px;color:#111316;background:var(--oled)}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto;align-content:space-between;row-gap:26px;justify-items:center}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ctl span{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.k1{grid-column:1;grid-row:1}.e1{grid-column:4;grid-row:1}.mb{grid-column:2/4;grid-row:1;align-self:center}
+.k2{grid-column:1;grid-row:2}.k3{grid-column:2;grid-row:2}.e2{grid-column:3;grid-row:2}.e3{grid-column:4;grid-row:2}
+.key{width:34px;height:34px;border-radius:50%;border:1px solid #0d0e10;cursor:pointer;padding:0;
+  background:radial-gradient(circle at 40% 35%,#45484d,#1e1f22 72%);box-shadow:0 3px 5px rgba(0,0,0,.55),0 1px 0 rgba(255,255,255,.08) inset;touch-action:none}
+.key.down{transform:translateY(1px);background:radial-gradient(circle at 40% 35%,#5a5e64,#26282b 72%);box-shadow:0 1px 2px rgba(0,0,0,.6)}
+.enc{position:relative;width:48px;height:48px;border-radius:50%;cursor:ns-resize;touch-action:none;
+  background:radial-gradient(circle at 38% 30%,#55585e,#1b1c1f 68%);border:1px solid #0d0e10;box-shadow:0 4px 7px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.09) inset;transform:rotate(var(--rot,0deg))}
+.enc i{position:absolute;left:50%;top:5px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:var(--ink)}
+.menubtn{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;color:var(--muted);background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:3px 8px;cursor:pointer}
+.menubtn:hover{color:var(--ink)}
+.menubtn[aria-pressed="true"]{color:#111316;background:var(--oled);border-color:var(--oled)}
+:focus-visible{outline:2px solid var(--oled);outline-offset:2px}
+@media (max-width:640px){
+  .device{grid-template-columns:minmax(0,1fr);padding:16px;gap:20px}
+  .controls{max-width:320px;width:100%;justify-self:center}
+}
+
+/* controller panel */
+.panel{background:var(--ground-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;background:transparent;border:1px solid transparent;color:var(--muted);border-radius:5px;padding:4px 10px;cursor:pointer;position:relative}
+.tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--line-2);background:var(--ground-3)}
+.devtab.used::after{content:"";position:absolute;top:4px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--led)}
+.devpanel{display:flex;flex-direction:column;gap:10px}
+#grid{display:block;width:100%;max-width:100%;aspect-ratio:2/1;touch-action:none;cursor:pointer}
+#arc{display:block;width:100%;max-width:100%;aspect-ratio:4/1;touch-action:none;cursor:grab}
+#crow{display:block;width:100%;max-width:100%;aspect-ratio:2.6/1}
+.crow-ins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px}
+@media (max-width:520px){.crow-ins{grid-template-columns:minmax(0,1fr)}}
+.crow-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:8px;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.crow-row input[type=range]{width:100%;min-width:0;accent-color:var(--led)}
+.crow-in-val{color:var(--ink);font-variant-numeric:tabular-nums;min-width:5.5ch;text-align:right}
+.crow-gate{font-family:var(--f-mono);font-size:10px;padding:3px 7px}
+.crow-gate.down{background:var(--led);color:#1a1300;border-color:var(--led)}
+.small{font-size:12px;color:var(--muted);margin:0}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.row label{font-size:12px;color:var(--muted)}
+.hint kbd{font-family:var(--f-mono);font-size:11px;color:var(--ink);border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:var(--ground-2)}
+
+/* forms */
+select,button,input{font:inherit;color:var(--ink)}
+select{background:var(--ground-2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:var(--f-mono);font-size:13px;min-width:0;max-width:100%}
+button,.btn{background:var(--ground-2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;text-decoration:none;color:var(--ink);display:inline-block;line-height:1.4}
+button:hover,.btn:hover{border-color:var(--line-2)}
+button:disabled{opacity:.6;cursor:default}
+button.primary{background:var(--oled);color:#111316;border-color:var(--oled);font-weight:600}
+button.danger{color:var(--err)}
+.spacer{flex:1}
+input[type=search],input[type=text]{background:var(--ground-3);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;min-width:0}
+
+/* editor */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toolbar select{flex:1 1 200px}
+textarea{width:100%;min-height:430px;resize:vertical;background:var(--ground-3);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:14px;
+  font-family:var(--f-mono);font-size:13px;line-height:1.6;tab-size:2;white-space:pre;overflow:auto}
+@media (max-width:640px){textarea{min-height:320px;font-size:12.5px}}
+.console{border:1px solid var(--line);border-radius:8px;background:var(--ground-3);display:flex;flex-direction:column;min-width:0}
+.conhead{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.conhead button{padding:2px 8px;font-size:11px}
+#log{margin:0;padding:8px 10px;height:180px;overflow:auto;font-family:var(--f-mono);font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+#log .e{color:var(--err)}#log .s{color:var(--muted)}#log .r{color:var(--oled)}
+.repl{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);padding:6px 10px}
+.repl b{font-family:var(--f-mono);font-weight:400;color:var(--muted)}
+.repl input{flex:1;min-width:0;background:transparent;border:0;font-family:var(--f-mono);font-size:12.5px;padding:2px 0}
+.repl input:focus{outline:none}
+details.api{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--ground-2)}
+details.api summary{cursor:pointer;font-size:13px;font-weight:500}
+details.api dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:12px 0 4px;font-size:12.5px}
+details.api dt{font-family:var(--f-mono);color:var(--oled)}
+details.api dd{margin:0;color:var(--muted);font-family:var(--f-mono);font-size:12px;word-break:break-word}
+details.api p{font-size:12.5px;color:var(--muted);margin:8px 0 0;max-width:65ch}
+
+/* library */
+.view{display:flex;flex-direction:column;gap:14px;min-width:0}
+.drop{border:1.5px dashed var(--line-2);border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:var(--ground-3)}
+.drop.over{border-color:var(--oled);background:#171a1f}
+.drop strong{display:block;font-weight:500;margin-bottom:4px}
+.drop span{font-size:12px;color:var(--muted)}
+h3{font-size:12px;font-family:var(--f-mono);font-weight:500;letter-spacing:.1em;color:var(--muted);margin:6px 0 0;text-transform:uppercase;display:flex;justify-content:space-between;gap:10px}
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+ul.list>li{padding:10px 12px;border-top:1px solid var(--line);min-width:0}
+ul.list>li:first-child{border-top:0}
+#catalog{max-height:70vh;overflow-y:auto;overscroll-behavior:contain}
+#installed,#audioFiles{max-height:40vh;overflow-y:auto}
+li.inst{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+li.inst button{padding:3px 10px;font-size:12px}
+li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.cat-main{min-width:0;flex:1}
+.cat-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.cat-name{font-family:var(--f-mono);font-weight:500;color:var(--ink);word-break:break-all}
+.cat-author{font-size:12px;color:var(--muted)}
+.cat-desc{margin:2px 0 6px;font-size:13px;color:var(--ink);opacity:.86}
+.cat-act{display:flex;gap:6px;flex-shrink:0}
+.cat-act button,.cat-act .btn{padding:3px 10px;font-size:12px}
+.cat-more{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-family:var(--f-mono);font-size:10.5px;padding:1px 6px;border-radius:3px;border:1px solid var(--line-2);color:var(--muted)}
+.chip.ok{color:var(--ok);border-color:rgba(166,212,159,.35)}
+.chip.warn{color:var(--led);border-color:rgba(244,177,62,.35)}
+.catbar{display:flex;flex-wrap:wrap;gap:8px}
+.catbar input{flex:1 1 200px}
+@media (max-width:520px){li.cat{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · LUA 5.3 · SOFTCUT · CROW</span></div>
+    <div class="status" id="status"><i></i><span id="statusText">起動中</span></div>
+  </header>
+
+  <main class="layout">
+    <section class="rig">
+      <div class="device">
+        <div class="screen-well">
+          <canvas id="oled" width="768" height="384" aria-label="norns 128×64 OLED"></canvas>
+          <div class="tag audio-hint" id="audioHint">タップで音が出ます</div>
+        </div>
+        <div class="controls">
+          <div class="ctl k1"><button class="key" data-k="1" aria-label="K1"></button><span>K1</span></div>
+          <div class="ctl mb"><button class="menubtn" id="menuBtn" aria-pressed="false" title="K1 短押しと同じ">MENU</button></div>
+          <div class="ctl e1"><div class="enc" data-e="1" tabindex="0" role="slider" aria-label="E1"><i></i></div><span>E1</span></div>
+          <div class="ctl k2"><button class="key" data-k="2" aria-label="K2"></button><span>K2</span></div>
+          <div class="ctl k3"><button class="key" data-k="3" aria-label="K3"></button><span>K3</span></div>
+          <div class="ctl e2"><div class="enc" data-e="2" tabindex="0" role="slider" aria-label="E2"><i></i></div><span>E2</span></div>
+          <div class="ctl e3"><div class="enc" data-e="3" tabindex="0" role="slider" aria-label="E3"><i></i></div><span>E3</span></div>
+        </div>
+      </div>
+
+      <div class="panel" id="devbox">
+        <div class="tabs" role="tablist">
+          <button class="devtab" data-dev="grid" role="tab" aria-selected="true">GRID 128</button>
+          <button class="devtab" data-dev="arc" role="tab" aria-selected="false">ARC 4</button>
+          <button class="devtab" data-dev="crow" role="tab" aria-selected="false">CROW</button>
+        </div>
+        <div class="devpanel" data-dev="grid">
+          <canvas id="grid" aria-label="monome grid 16×8"></canvas>
+        </div>
+        <div class="devpanel" data-dev="arc" hidden>
+          <canvas id="arc" aria-label="monome arc 4 リング"></canvas>
+          <p class="small">リングをなぞると a.delta、中央を押すと a.key。ホイールでも回せます。</p>
+        </div>
+        <div class="devpanel" data-dev="crow" hidden>
+          <canvas id="crow" aria-label="crow 出力電圧"></canvas>
+          <div class="crow-ins">
+            <div class="crow-row"><span>IN 1</span><input type="range" class="crow-in" id="crowIn1" data-in="1" min="-5" max="10" step="0.01" value="0" aria-label="crow input 1"><span class="crow-in-val" data-in="1">0.00 V</span><button class="crow-gate" data-in="1">5V</button></div>
+            <div class="crow-row"><span>IN 2</span><input type="range" class="crow-in" id="crowIn2" data-in="2" min="-5" max="10" step="0.01" value="0" aria-label="crow input 2"><span class="crow-in-val" data-in="2">0.00 V</span><button class="crow-gate" data-in="2">5V</button></div>
+          </div>
+          <label class="row small"><input type="checkbox" id="crowListen"> OUT 1 を V/oct、OUT 2 を VCA として音で聴く</label>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="inputSrc">AUDIO IN（softcut の録音元）</label>
+        <select id="inputSrc"></select>
+      </div>
+      <p class="small hint">K1 短押しでシステムメニュー（MIX / HOME / PARAMETERS）。エンコーダーは上下ドラッグかホイール。キーボード: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> = K1–K3、<kbd>Q</kbd><kbd>W</kbd> = E1、<kbd>A</kbd><kbd>S</kbd> = E2、<kbd>Z</kbd><kbd>X</kbd> = E3。</p>
+    </section>
+
+    <section class="side">
+      <div class="tabs" role="tablist">
+        <button class="viewtab" data-view="editor" role="tab" aria-selected="true">エディタ</button>
+        <button class="viewtab" data-view="library" role="tab" aria-selected="false">ライブラリ</button>
+      </div>
+
+      <div class="view" data-view="editor" id="editorView">
+        <div class="toolbar">
+          <select id="file" aria-label="ファイル"></select>
+          <button id="run" class="primary" title="Ctrl / ⌘ + Enter">▶ 実行</button>
+          <button id="stop">■ 停止</button>
+          <button id="newScript">＋ 新規</button>
+          <button id="revert" hidden>元に戻す</button>
+        </div>
+        <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Lua スクリプト"></textarea>
+        <div class="console">
+          <div class="conhead"><span>MATRON</span><button id="clr">クリア</button></div>
+          <pre id="log" aria-live="polite"></pre>
+          <div class="repl"><b>&gt;&gt;</b><input id="repl" type="text" placeholder="Lua を1行入力して Enter（例: engine.hz(440)）" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        </div>
+        <details class="api">
+          <summary>対応している norns API</summary>
+          <dl>
+            <dt>screen</dt><dd>clear update level move line rect circle arc curve stroke fill pixel text text_right text_center text_rotate text_extents font_size font_face line_width blend_mode display_png peek …</dd>
+            <dt>softcut</dt><dd>6ボイス・2バッファ（各約87秒）。rate / loop / fade / rec・pre / post filter / level_cut_cut / phase poll / render_buffer / buffer_read・write</dd>
+            <dt>crow</dt><dd>output.volts / slew / action（to, loop, times, held, dyn, lfo, ar, adsr, pulse …）· input.mode stream / change</dd>
+            <dt>clock · metro</dt><dd>clock.run / sleep / sync / cancel · metro.init · poll（amp_in / amp_out）</dd>
+            <dt>params</dt><dd>number option control taper binary trigger text file separator group · pset の読み書き</dd>
+            <dt>lib</dt><dd>util tabutil controlspec musicutil sequins lattice er formatters ui pattern_time beatclock fileselect textentry listselect intonation</dd>
+            <dt>engine</dt><dd>PolyPerc · TestSine · PolySub（簡易）· MollyThePoly（簡易）。ほかのエンジンは音名系コマンドを代替音で鳴らします</dd>
+            <dt>grid · arc</dt><dd>g:led all refresh · g.key · a:led all segment refresh · a.delta a.key</dd>
+          </dl>
+          <p>include / require は dust/code 内のファイルとコアライブラリを読み込みます。midi と crow.ii は無視されます。ファイルはこのブラウザ内（IndexedDB）に保存されます。</p>
+        </details>
+      </div>
+
+      <div class="view" data-view="library" id="libraryView" hidden>
+        <div class="drop" id="drop" role="button" tabindex="0">
+          <strong>ZIP・.lua・音声・.png をここにドロップ</strong>
+          <span>カタログにないスクリプトは ZIP や .lua をここに。音声は dust/audio/ に入ります。</span>
+        </div>
+        <input type="file" id="picker" multiple hidden accept=".zip,.lua,.wav,.aif,.aiff,.flac,.mp3,.ogg,.opus,.m4a,.png">
+
+        <h3><span>インストール済み · dust/code</span></h3>
+        <ul class="list" id="installed"></ul>
+
+        <h3><span>音声と画像 · dust</span></h3>
+        <ul class="list" id="audioFiles"></ul>
+
+        <h3><span>norns.community カタログ</span><span id="catCount"></span></h3>
+        <div class="catbar">
+          <input type="search" id="catSearch" placeholder="名前・作者・タグで検索" aria-label="カタログ検索">
+          <select id="catFilter" aria-label="絞り込み">
+            <option value="all">すべて</option>
+            <option value="ok">起動確認済み</option>
+            <option value="engine">対応エンジンのみ</option>
+            <option value="softcut">softcut</option>
+            <option value="grid">grid</option>
+            <option value="arc">arc</option>
+            <option value="crow">crow</option>
+          </select>
+        </div>
+        <p class="small">「インストール」で GitHub から直接このブラウザに取り込みます（git submodule も含む）。入れたファイルはこのブラウザ内にだけ保存されます。</p>
+        <ul class="list" id="catalog"></ul>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="norns/softcut.js"></script>
+<script src="norns/examples.js"></script>
+<script src="norns/app.js"></script>
+
+</body>
+</html>
