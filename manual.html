@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>norns-web マニュアル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap">
+<style>
+:root{
+  /* layout: sticky contents rail on the left, single reading column on the right; rail collapses to a top list on phones */
+  --ground:#141517;
+  --ground-2:#1b1c1f;
+  --ground-3:#0f1012;
+  --ink:#dfe2dc;
+  --muted:#8d918a;
+  --line:#2d2f33;
+  --oled:#eaf2ff;
+  --led:#f4b13e;
+  --ok:#a6d49f;
+  --f-ui:"IBM Plex Sans JP", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.75}
+a{color:var(--oled)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--oled);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.logo{font-family:var(--f-mono);font-weight:500;font-size:26px;letter-spacing:.02em}
+.sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.back{font-family:var(--f-mono);font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;color:var(--ink);background:var(--ground-2)}
+.back:hover{border-color:#44474c}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;align-items:start}
+nav.toc{position:sticky;top:20px;font-size:13px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line)}
+nav.toc a{display:block;padding:3px 0 3px 14px;color:var(--muted);text-decoration:none;margin-left:-1px;border-left:1px solid transparent}
+nav.toc a:hover{color:var(--ink);border-left-color:var(--led)}
+nav.toc .label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:24px}
+  nav.toc{position:static}
+  nav.toc ol{flex-direction:row;flex-wrap:wrap;border-left:0;gap:6px}
+  nav.toc a{border:1px solid var(--line);border-radius:5px;padding:3px 9px;margin:0}
+}
+main{min-width:0;max-width:72ch}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px;text-wrap:balance;font-weight:600}
+.lede{color:var(--muted);margin:0 0 34px}
+section{padding-top:8px;margin-bottom:44px;scroll-margin-top:16px}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px;font-weight:600;text-wrap:balance;display:flex;align-items:baseline;gap:12px}
+h2 .n{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--led);letter-spacing:.08em}
+h3{font-size:15.5px;margin:26px 0 8px;font-weight:600}
+p{margin:0 0 12px}
+ul,ol.steps{margin:0 0 14px;padding-left:1.3em}
+li{margin:3px 0}
+ol.steps li{margin:6px 0}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+code{background:var(--ground-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+kbd{display:inline-block;min-width:1.7em;text-align:center;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--ground-2);color:var(--ink)}
+.tbl{overflow-x:auto;margin:6px 0 18px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:8px 12px;border-top:1px solid var(--line)}
+thead th{border-top:0;background:var(--ground-2);font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em}
+td:first-child{white-space:nowrap}
+.note{border-left:2px solid var(--led);background:var(--ground-2);padding:10px 14px;border-radius:0 6px 6px 0;margin:12px 0 16px;font-size:14px}
+.note strong{color:var(--led);font-weight:500}
+.panel-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 18px}
+@media (max-width:560px){.panel-map{grid-template-columns:minmax(0,1fr)}}
+.panel-map div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--ground-3);font-size:13.5px;line-height:1.6}
+.panel-map b{display:block;font-family:var(--f-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--oled);margin-bottom:2px}
+.levels{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;margin:8px 0 4px;max-width:520px}
+.levels span{aspect-ratio:1;border-radius:3px;background:#26272b;position:relative;font-family:var(--f-mono);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.levels span::before{content:"";position:absolute;inset:0;border-radius:3px;background:var(--led);opacity:var(--a,0)}
+.levels span i{position:relative;font-style:normal;mix-blend-mode:difference}
+.cap{font-size:12.5px;color:var(--muted);margin:0 0 16px}
+footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · MANUAL</span></div>
+    <a class="back" href="./">← エミュレータに戻る</a>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="目次">
+      <p class="label">CONTENTS</p>
+      <ol>
+        <li><a href="#start">はじめに</a></li>
+        <li><a href="#screen">画面の見方</a></li>
+        <li><a href="#controls">本体の操作</a></li>
+        <li><a href="#menu">システムメニュー</a></li>
+        <li><a href="#library">スクリプトを入れる</a></li>
+        <li><a href="#editor">エディタと REPL</a></li>
+        <li><a href="#devices">grid · arc · crow</a></li>
+        <li><a href="#usbgrid">実機グリッド</a></li>
+        <li><a href="#audio">音と softcut</a></li>
+        <li><a href="#compat">対応範囲</a></li>
+        <li><a href="#data">データの保存</a></li>
+        <li><a href="#trouble">困ったとき</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <h1>norns-web マニュアル</h1>
+      <p class="lede">monome norns の Lua スクリプトをブラウザで動かすエミュレータです。norns.community のスクリプトを入れて遊んだり、自分でスクリプトを書いて試したりできます。</p>
+
+      <section id="start">
+        <h2><span class="n">01</span>はじめに</h2>
+        <ol class="steps">
+          <li>ページを開くと、サンプルの <code>step</code>（8ステップのシーケンサー）が自動で動き出します。</li>
+          <li>画面のどこかを一度クリックすると音が出ます。ブラウザの決まりで、操作するまでは無音です。</li>
+          <li>右の「ライブラリ」タブから、norns.community のスクリプトを選んで「インストール」を押すと、取り込んですぐ起動します。</li>
+        </ol>
+        <p>パソコンの Chrome / Edge / Safari / Firefox で動きます。スマホでも動きますが、エンコーダーやグリッドの操作はパソコンの方が快適です。実機グリッドの接続はパソコン版の Chrome と Edge だけです。</p>
+      </section>
+
+      <section id="screen">
+        <h2><span class="n">02</span>画面の見方</h2>
+        <div class="panel-map">
+          <div><b>本体（左上）</b>128×64 の画面、キー K1〜K3、エンコーダー E1〜E3、MENU ボタン。</div>
+          <div><b>コントローラ（左下）</b>GRID 128 / ARC 4 / CROW のタブ。スクリプトが使うものには黄色い点が付き、最初に使われたタブに自動で切り替わります。</div>
+          <div><b>エディタ（右）</b>スクリプトの表示と編集、実行・停止、MATRON（ログ）と REPL。</div>
+          <div><b>ライブラリ（右）</b>カタログ検索、インストール、取り込み済みの一覧、音声ファイル。</div>
+        </div>
+        <p>右上の表示は実行状態です。緑は実行中、赤はエラーが出たことを表します。エラーの内容は MATRON 欄に出ます。</p>
+      </section>
+
+      <section id="controls">
+        <h2><span class="n">03</span>本体の操作</h2>
+        <h3>マウス・タッチ</h3>
+        <ul>
+          <li><strong>キー</strong>：押している間が「押下」、離すと「離した」としてスクリプトに届きます。</li>
+          <li><strong>エンコーダー</strong>：つまみの上で上下（または左右）にドラッグして回します。マウスホイールでも回せます。クリックして選んだ状態なら矢印キーでも回せます。</li>
+          <li><strong>MENU</strong>：K1 の短押しと同じで、システムメニューを開閉します。</li>
+        </ul>
+        <h3>キーボード</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>キー</th><th>動作</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>K1 / K2 / K3</td></tr>
+            <tr><td><kbd>Q</kbd> <kbd>W</kbd></td><td>E1 を左 / 右に回す</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>S</kbd></td><td>E2 を左 / 右に回す</td></tr>
+            <tr><td><kbd>Z</kbd> <kbd>X</kbd></td><td>E3 を左 / 右に回す</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></td><td>エディタで編集中のスクリプトを実行</td></tr>
+          </tbody>
+        </table></div>
+        <p>エディタや入力欄に文字を打っている間は、上のキーは本体操作になりません。</p>
+      </section>
+
+      <section id="menu">
+        <h2><span class="n">04</span>システムメニュー</h2>
+        <p>K1 を短く押す（または MENU）と開き、もう一度押すとスクリプトの画面に戻ります。K1 を押したまま他のキーやエンコーダーを使うと、メニューは開かずスクリプトに K1 として届きます。E1 でページを切り替えます。</p>
+        <div class="tbl"><table>
+          <thead><tr><th>ページ</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>MIX</td><td>E2 で項目（out / eng / cut / rev）を選び、E3 で音量を変えます。</td></tr>
+            <tr><td>TAPE</td><td>この版では未対応です。</td></tr>
+            <tr><td>HOME</td><td>E2 で項目を選び K3 で決定。SELECT で dust/code 内のスクリプトを選んで起動、SYSTEM で再起動、SLEEP で画面を消します。K2 で戻ります。</td></tr>
+            <tr><td>PARAMETERS</td><td>E2 で選び、E3 で値を変えます。トリガー・オンオフ・ファイル・文字列の項目は K3 で操作します。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="library">
+        <h2><span class="n">05</span>スクリプトを入れる</h2>
+        <h3>カタログから</h3>
+        <p>「ライブラリ」タブの下半分が norns.community のカタログです。名前・作者・タグで検索し、絞り込み（起動確認済み / softcut / grid / arc / crow など）もできます。</p>
+        <ul>
+          <li><strong>インストール</strong>：GitHub から直接ブラウザに取り込み、すぐ起動します。git submodule も一緒に取り込みます。ほかのプロジェクトを必要とするスクリプトは、それも続けて入れます。</li>
+          <li><strong>起動確認済</strong>：こちらで起動してエラーが出なかったスクリプトです。付いていないものも動くことがあります。</li>
+          <li><strong>チップの見方</strong>：緑のエンジン名は対応済み、黄色の「代替音」は簡易シンセで鳴らします。「要: ○○」は必要な別プロジェクト、「midi（未対応）」は MIDI 機能が使えないことを表します。</li>
+        </ul>
+        <div class="note"><strong>回数の上限</strong>　GitHub の仕組みで、インストールは1時間に約60回（1プロジェクト＝1回＋submodule ごとに1回）までです。上限に達すると、何時から再開できるかが表示されます。</div>
+        <h3>インストール済みの管理</h3>
+        <p>「インストール済み · dust/code」の一覧から、実行・更新・削除ができます。<strong>更新</strong>は GitHub から最新版を取り直すので、自分で編集した内容は消えます。<strong>削除</strong>は2回押すと実行されます。</p>
+        <h3>ファイルから</h3>
+        <p>カタログにないスクリプトは、上部の枠に ZIP か .lua をドロップします（クリックしてファイルを選ぶこともできます）。ZIP は <code>dust/code/&lt;名前&gt;/</code> に展開され、起動できるファイルが自動で開きます。音声ファイル（wav / aif / flac / mp3 / ogg など）は <code>dust/audio/</code>、png は <code>dust/data/images/</code> に入ります。</p>
+      </section>
+
+      <section id="editor">
+        <h2><span class="n">06</span>エディタと REPL</h2>
+        <ul>
+          <li>上のプルダウンで <code>dust/code</code> 内のファイルを選びます。編集内容は自動で保存されます。</li>
+          <li><strong>▶ 実行</strong>（<kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd>）で今のファイルを起動、<strong>■ 停止</strong>で止めます。<kbd>Tab</kbd> は空白2つを入れます。</li>
+          <li><strong>＋ 新規</strong>で <code>untitledN</code> というスクリプトを作ります。</li>
+          <li><strong>元に戻す</strong>は同梱サンプルを最初の状態に戻します。</li>
+        </ul>
+        <p>MATRON 欄には <code>print</code> の出力とエラーが出ます。一番下の <code>&gt;&gt;</code> 欄は REPL で、実行中のスクリプトの中で Lua を1行ずつ試せます。</p>
+        <div class="tbl"><table>
+          <thead><tr><th>例</th><th>結果</th></tr></thead>
+          <tbody>
+            <tr><td><code>engine.hz(440)</code></td><td>440Hz を1音鳴らす</td></tr>
+            <tr><td><code>params:get('clock_tempo')</code></td><td>今のテンポを表示</td></tr>
+            <tr><td><code>params:set('clock_tempo', 140)</code></td><td>テンポを変える</td></tr>
+            <tr><td><code>tab.print(params.lookup)</code></td><td>パラメータ ID の一覧</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="devices">
+        <h2><span class="n">07</span>grid · arc · crow</h2>
+        <h3>GRID 128</h3>
+        <p>16×8 のパッドをクリック・タップすると、スクリプトの <code>g.key(x, y, z)</code> に届きます。複数の指で同時に押せます。実機をつなぐ方法は次の章にあります。</p>
+        <h3>ARC 4</h3>
+        <p>リングの外側をなぞるように回すと <code>a.delta(n, d)</code>、中央のつまみを押すと <code>a.key(n, z)</code> に届きます。ホイールでも回せます。</p>
+        <h3>CROW</h3>
+        <ul>
+          <li><strong>OUT 1〜4</strong>：出力電圧（−5〜+10V）をバーで表示します。</li>
+          <li><strong>IN 1 / IN 2</strong>：スライダーで入力電圧を作ります。「5V」ボタンは押している間 5V になるゲートです。</li>
+          <li><strong>音で聴く</strong>：OUT 1 を音程（V/oct）、OUT 2 を音量（VCA）として鳴らします。</li>
+        </ul>
+        <p><code>crow.ii</code>（i2c 機器）と crow 本体で動くスクリプト（<code>crow.loadscript</code> など）は無視されます。</p>
+      </section>
+
+      <section id="usbgrid">
+        <h2><span class="n">08</span>実機グリッド</h2>
+        <p>本物の monome grid を USB でつなぎ、エミュレータの grid として使えます。パソコン版の Chrome / Edge が必要です。</p>
+        <ol class="steps">
+          <li>serialosc など、ほかのソフトがグリッドを使っていれば止めます。</li>
+          <li>GRID 128 タブの「USB grid に接続」を押し、一覧からグリッドを選びます。</li>
+          <li>「接続中」と表示されたら、キーとLEDがスクリプトとつながります。</li>
+        </ol>
+        <h3>機種と通信方式</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>設定</th><th>対象</th></tr></thead>
+          <tbody>
+            <tr><td>自動判別</td><td>mext が応答すれば mext、しなければ series として扱います。</td></tr>
+            <tr><td>mext</td><td>2011年以降の grid。サイズも自動で判別します。</td></tr>
+            <tr><td>series</td><td>2007〜2010年の monome 64 / 128 / 256。サイズは手で選びます。</td></tr>
+            <tr><td>40h</td><td>2006年の 40h と arduinome（通信速度 57600 を選ぶ）。</td></tr>
+          </tbody>
+        </table></div>
+        <p>256 では上半分の 16×8 を使います。ケーブルの向きが逆になる置き方なら「向き」を 180°にします。</p>
+        <h3>階調としきい値</h3>
+        <p>スクリプトは LED の明るさを 0〜15 の16段階で指定します。実機の性能に合わせて、どのレベルからどの明るさで光らせるかを決められます。</p>
+        <ul>
+          <li><strong>16段階</strong>：varibright 機向け。そのまま送ります。</li>
+          <li><strong>4段階</strong>：段階1〜3（暗・中・明）が、それぞれレベルいくつ以上で光るかを決めます。各段階で実機に送る値（初期値 5 / 10 / 15）も変えられます。</li>
+          <li><strong>点灯 / 消灯のみ</strong>：単色の初代機向け。レベルいくつ以上で点灯させるかを1つ決めます。</li>
+        </ul>
+        <div class="levels" aria-label="4段階の初期設定の例">
+          <span><i>0</i></span><span><i>1</i></span><span><i>2</i></span><span><i>3</i></span>
+          <span style="--a:.4"><i>4</i></span><span style="--a:.4"><i>5</i></span><span style="--a:.4"><i>6</i></span><span style="--a:.4"><i>7</i></span>
+          <span style="--a:.7"><i>8</i></span><span style="--a:.7"><i>9</i></span><span style="--a:.7"><i>10</i></span><span style="--a:.7"><i>11</i></span>
+          <span style="--a:1"><i>12</i></span><span style="--a:1"><i>13</i></span><span style="--a:1"><i>14</i></span><span style="--a:1"><i>15</i></span>
+        </div>
+        <p class="cap">4段階の初期設定：0〜3 は消灯、4〜7 が暗、8〜11 が中、12〜15 が明。</p>
+        <p>設定欄の「対応表」に、今の設定で各レベルがどうなるかが出ます。「押している間テスト表示」を押すと、実機の左の列から順にレベル 0〜15 が並ぶので、どの列から光るかを見ながら合わせます。「画面のグリッドも同じ階調で表示」をオンにすると、画面上の grid も実機と同じ見え方になります。</p>
+        <div class="note"><strong>一覧に出ないとき</strong>　初代機（FTDI チップ）は、パソコン側に FTDI のドライバが必要なことがあります。macOS は標準で入っています。</div>
+      </section>
+
+      <section id="audio">
+        <h2><span class="n">09</span>音と softcut</h2>
+        <h3>エンジン</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>エンジン</th><th>状態</th></tr></thead>
+          <tbody>
+            <tr><td>PolyPerc</td><td>対応（hz amp cutoff release pw gain pan）</td></tr>
+            <tr><td>TestSine</td><td>対応</td></tr>
+            <tr><td>PolySub / MollyThePoly</td><td>簡易版。音色は近いものになります。</td></tr>
+            <tr><td>その他</td><td>SuperCollider 製のエンジンは未実装です。音程を指定するコマンドは代わりのパーカッシブ音で鳴らします。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>softcut</h3>
+        <p>6ボイス・2バッファ（各約87秒）で、再生速度・ループ・クロスフェード・録音とオーバーダブ・フィルター・ボイス間の送り・位置の通知・波形表示・音声ファイルの読み書きに対応しています。</p>
+        <h3>AUDIO IN</h3>
+        <p>本体の下にある「AUDIO IN」で、録音元を選べます。「テストトーン」は簡単なアルペジオ、ほかに <code>dust/audio</code> に入れた音声ファイルをループで流せます。マイク入力には対応していません。</p>
+        <p>ほかに、reverb と compressor（オン / オフと量）、amp_in / amp_out の poll が使えます。</p>
+      </section>
+
+      <section id="compat">
+        <h2><span class="n">10</span>対応範囲</h2>
+        <p>カタログの約4分の3のスクリプトがエラーなく起動します。動かないものの主な理由は次のとおりです。</p>
+        <ul>
+          <li>SuperCollider 製エンジンが追加するパラメータを前提にしている</li>
+          <li>MIDI 機器が必須</li>
+          <li>ネット接続や OS のコマンドを使う</li>
+          <li>音声やプリセットのファイルが dust に入っている前提</li>
+        </ul>
+        <h3>使える主なライブラリ</h3>
+        <p><code>util</code> <code>tabutil</code> <code>controlspec</code> <code>musicutil</code> <code>sequins</code> <code>lattice</code> <code>lfo</code> <code>reflection</code> <code>pattern_time</code> <code>er</code> <code>formatters</code> <code>ui</code> <code>graph</code> <code>filtergraph</code> <code>envgraph</code> <code>voice</code> <code>fileselect</code> <code>textentry</code> <code>listselect</code> <code>cjson</code> など。<code>include</code> と <code>require</code> は dust/code 内のファイルとこれらのライブラリを読みます。</p>
+        <h3>未対応</h3>
+        <p>MIDI、crow.ii、tape、マイク入力、OSC、mod の読み込みは使えません。呼び出してもエラーにはならず、無視されます。</p>
+      </section>
+
+      <section id="data">
+        <h2><span class="n">11</span>データの保存</h2>
+        <p>入れたスクリプト、編集内容、音声ファイル、pset などは、すべて使っているブラウザの中（IndexedDB）に保存されます。サーバーには何も送りません。</p>
+        <ul>
+          <li>別のブラウザや端末では、最初の状態から始まります。</li>
+          <li>同じ URL を友達に送っても、あなたのデータは見えません。</li>
+          <li>全部消して初期状態に戻すには、ブラウザの設定でこのサイトのデータを削除します。</li>
+        </ul>
+      </section>
+
+      <section id="trouble">
+        <h2><span class="n">12</span>困ったとき</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>症状</th><th>確認すること</th></tr></thead>
+          <tbody>
+            <tr><td>音が出ない</td><td>画面を一度クリックしたか。MIX ページの音量。スクリプトが PolyPerc 以外のエンジンなら、代替音か無音のことがあります。</td></tr>
+            <tr><td>右上が赤くなった</td><td>MATRON 欄のエラーを見ます。<code>include: … が見つかりません</code> は必要なファイルや別プロジェクトがない状態です。</td></tr>
+            <tr><td>インストールが失敗する</td><td>回数の上限（1時間約60回）か、ネットワークの問題です。表示された時刻以降にもう一度押します。</td></tr>
+            <tr><td>動きが止まった</td><td>■ 停止 → ▶ 実行 で起動し直します。無限ループは自動で中断され、MATRON に timeout と出ます。</td></tr>
+            <tr><td>実機グリッドがつながらない</td><td>Chrome / Edge か。serialosc を止めたか。古い機種はプロトコルとサイズを手で選んでみます。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <footer>
+        <p>norns は monome の製品です。このエミュレータは非公式で、取り込んだスクリプトの権利は各作者に帰属します。<a href="https://github.com/k5sano/norns-web" target="_blank" rel="noopener">ソースコード（GitHub）</a></p>
+      </footer>
+    </main>
+  </div>
+</div>
+</body>
+</html>

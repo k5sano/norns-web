@@ -36,6 +36,10 @@ body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size
 .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .logo{font-family:var(--f-mono);font-weight:500;font-size:26px;letter-spacing:.02em}
 .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.top-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.manual-link{font-size:13px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 12px;background:var(--ground-2)}
+.manual-link:hover{border-color:var(--line-2)}
+.manual-link:focus-visible{outline:2px solid var(--oled);outline-offset:2px}
 .status{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
 .status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
 .status.run i{background:var(--ok);box-shadow:0 0 8px var(--ok)}
@@ -187,7 +191,10 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
 <div class="wrap">
   <header class="top">
     <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · LUA 5.3 · SOFTCUT · CROW</span></div>
-    <div class="status" id="status"><i></i><span id="statusText">起動中</span></div>
+    <div class="top-right">
+      <div class="status" id="status"><i></i><span id="statusText">起動中</span></div>
+      <a class="manual-link" href="manual.html" target="_blank" rel="noopener">マニュアル</a>
+    </div>
   </header>
 
   <main class="layout">
@@ -323,7 +330,7 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
           <div class="repl"><b>&gt;&gt;</b><input id="repl" type="text" placeholder="Lua を1行入力して Enter（例: engine.hz(440)）" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <details class="api">
-          <summary>対応している norns API</summary>
+          <summary>対応している norns API（詳しくは<a href="manual.html#compat" target="_blank" rel="noopener">マニュアル</a>）</summary>
           <dl>
             <dt>screen</dt><dd>clear update level move line rect circle arc curve stroke fill pixel text text_right text_center text_rotate text_extents font_size font_face line_width blend_mode display_png peek …</dd>
             <dt>softcut</dt><dd>6ボイス・2バッファ（各約87秒）。rate / loop / fade / rec・pre / post filter / level_cut_cut / phase poll / render_buffer / buffer_read・write</dd>
