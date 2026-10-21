@@ -129,6 +129,12 @@ const D = {
   'lib.audio.empty': ['dust/audio はまだ空です', 'dust/audio is empty'],
   'lib.files': ['{n} ファイル', '{n} files'],
   'lib.file1': ['1 ファイル', '1 file'],
+  // repository footer
+  'repo.desc': ['monome norns のブラウザ版エミュレータ', 'A browser-based monome norns emulator'],
+  'repo.issues': ['不具合報告・要望', 'Issues and requests'],
+  'repo.history': ['更新履歴', 'Changelog'],
+  'repo.note': ['norns は monome の製品です。このエミュレータは非公式で、取り込んだスクリプトの権利は各作者に帰属します。', 'norns is a monome product. This emulator is unofficial, and installed scripts belong to their authors.'],
+  'repo.updated': ['最終更新 {d}', 'updated {d}'],
   // log / errors
   'log.ignored': ['{k} は未実装のため無視されます', '{k} is not implemented and is ignored'],
   'log.png.missing': ['画像が見つかりません: {p}', 'Image not found: {p}'],
