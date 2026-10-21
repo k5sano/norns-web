@@ -20,4 +20,11 @@ GitHub Pages（Settings → Pages → Branch: `main` / `/ (root)`）で公開し
 - SuperCollider 製エンジンは未実装。音名系コマンドは代替音で鳴ります
 - GitHub API は未認証だと 1 時間 60 回まで（1 プロジェクトにつき 1 回 + submodule ごとに 1 回）
 
-取り込んだスクリプトの権利は各作者に帰属します。このリポジトリには含まれていません。
+## ライセンス
+
+このリポジトリのコードは [MIT License](LICENSE) です。
+
+- 外部ライブラリは CDN から読み込んでいて、このリポジトリには含みません：[fengari-web](https://github.com/fengari-lua/fengari-web)（MIT）、[JSZip](https://github.com/Stuk/jszip)（MIT / GPLv3）、フォントは IBM Plex と Silkscreen（SIL Open Font License）。
+- `norns/catalog.json` のスクリプト名・作者・説明・URL は [norns.community](https://norns.community) のカタログに由来します。
+- カタログからインストールするスクリプトは、使う人のブラウザが GitHub から直接取得するもので、このリポジトリには含まれません。各スクリプトの権利は作者に帰属し、それぞれのライセンスに従います。
+- norns と monome は monome の名称です。このエミュレータは非公式のものです。
