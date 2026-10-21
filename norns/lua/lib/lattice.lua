@@ -34,6 +34,7 @@ function Lattice:hard_restart()
   for _, s in pairs(self.sprockets) do s.phase = s:_period() - s:_delay_pulses(); s.downbeat = false end
   self:start()
 end
+function Lattice:reset() self:hard_restart() end
 function Lattice:destroy()
   self:stop()
   if self.superclock_id then clock.cancel(self.superclock_id) end

@@ -5,7 +5,7 @@
 const BASE = 'norns/';
 const LUA_LIBS = ['util', 'tabutil', 'controlspec', 'musicutil', 'er', 'sequins', 'lattice', 'formatters', 'intonation',
   'filters', 'beatclock', 'pattern_time', 'ui', 'fileselect', 'textentry', 'listselect', 'paramset', 'crow_emu', 'menu_emu',
-  'lfo', 'reflection', 'graph', 'polysub', 'filtergraph', 'envgraph', 'voice', 'gridbuf', 'container_deque', 'bit32'];
+  'lfo', 'reflection', 'graph', 'polysub', 'filtergraph', 'envgraph', 'voice', 'gridbuf', 'container_deque', 'bit32', 'cjson_emu', 'param_option'];
 const DUST = '/home/we/dust/';
 const CODE = DUST + 'code/';
 const AUDIO_EXT = /\.(wav|aif|aiff|flac|mp3|ogg|opus|m4a)$/i;

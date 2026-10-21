@@ -115,17 +115,31 @@ function File:flush() if self.writable and self.dirty then __fs_write(self.path,
 function File:close() self:flush(); return true end
 function File:setvbuf() return true end
 function io.lines(path, fmt)
-  if not path then return function() return nil end end
+  if not path then if cur_in then return cur_in:lines(fmt) end return function() return nil end end
   local f, e = io.open(path); if not f then error(e, 2) end
   return f:lines(fmt)
 end
-function io.write(...) local t = {} for i = 1, select('#', ...) do t[#t + 1] = tostring((select(i, ...))) end __print(table.concat(t)) end
-function io.read() return nil end
+local cur_in, cur_out = nil, nil
+function io.input(f)
+  if f == nil then return cur_in end
+  if type(f) == 'string' then local h, e = io.open(f, 'r'); if not h then error(e, 2) end f = h end
+  cur_in = f; return f
+end
+function io.output(f)
+  if f == nil then return cur_out end
+  if type(f) == 'string' then local h, e = io.open(f, 'w'); if not h then error(e, 2) end f = h end
+  cur_out = f; return f
+end
+function io.write(...)
+  if cur_out then return cur_out:write(...) end
+  local t = {} for i = 1, select('#', ...) do t[#t + 1] = tostring((select(i, ...))) end __print(table.concat(t))
+end
+function io.read(...) if cur_in then return cur_in:read(...) end return nil end
 function io.popen(cmd)
   warn_once('io.popen', 'os コマンド (' .. tostring(cmd):sub(1, 40) .. ') は実行できません')
   return setmetatable({ buf = '', pos = 1, path = '' }, File)
 end
-function io.close(f) if f then f:close() end end
+function io.close(f) f = f or cur_out; if f then f:close() end if f == cur_out then cur_out = nil end end
 io.stdout = { write = function(self, ...) io.write(...) end, flush = function() end }
 io.stderr = io.stdout
 os.execute = function() return true end
@@ -174,10 +188,16 @@ _norns = setmetatable({}, { __index = function(t, k)
   k = tostring(k)
   if k:match('^screen_') and screen[k:sub(8)] then return screen[k:sub(8)] end
   warn_once('_norns.' .. k)
-  return function() end
+  local node
+  node = setmetatable({}, { __index = function() return node end, __call = function() end })
+  return node
 end })
+math.atan2 = math.atan2 or math.atan
+norns.system_cmd = function(cmd, cb) if cb then clock.run(function() clock.sleep(0.01); cb('') end) end end
+local keycode_n = 0
+local KEYCODES = setmetatable({}, { __index = function(t, k) keycode_n = keycode_n + 1; rawset(t, k, keycode_n); return keycode_n end })
 package.preload['core/mods'] = function()
-  return { hook = { register = function() end }, menu = { register = function() end, redraw = function() end, exit = function() end }, this_name = 'mod', is_enabled = function() return false end }
+  return { hook = { register = function() end }, menu = { register = function() end, redraw = function() end, exit = function() end }, this_name = 'mod', is_enabled = function() return false end, loaded_mod_names = function() return {} end, get_loaded_mod_names = function() return {} end }
 end
 package.cpath = package.cpath or ''
 package.path = (package.path or '') .. ';/home/we/norns/lua/lib/?.lua'
@@ -208,7 +228,7 @@ local function find_module(name)
   }
   for _, p in ipairs(cands) do if __fs_exists(p) then return p end end
   -- tolerate 'core/xxx' and 'lib/xxx' prefixes used by some scripts
-  local base = n:gsub('^core/', ''):gsub('^lib/', '')
+  local base = slash:gsub('^core/', ''):gsub('^lib/', '')
   if __fs_exists(CORE .. base .. '.lua') then return CORE .. base .. '.lua' end
   return nil
 end
@@ -240,6 +260,7 @@ util = require 'util'
 tab = require 'tabutil'
 controlspec = require 'controlspec'
 function util.time() return __time() end
+util.system_cmd = norns.system_cmd
 
 -- screen ---------------------------------------------------------------------
 screen = {}
@@ -283,6 +304,7 @@ engine = setmetatable({}, {
   __index = function(t, k)
     if k == 'name' then return engine_name end
     if k == 'commands' then return __engine_commands() end
+    if k == 'names' then return { 'PolyPerc', 'TestSine', 'PolySub', 'MollyThePoly', 'None' } end
     if k == 'list_commands' then return function() for _, c in ipairs(__engine_commands_list()) do print(c) end end end
     if k == 'load' then return function(n, cb) engine_name = n; __engine_name(n); if cb then clock.run(function() clock.sleep(0.05); cb() end) end end end
     return function(...) __engine(tostring(k), ...) end
@@ -387,7 +409,7 @@ params:add_option('clock_source', 'source', { 'internal', 'midi', 'link', 'crow'
 params:hide('clock_source')
 params:add_trigger('clock_reset', 'reset')
 params:hide('clock_reset')
-for _, id in ipairs({ 'clock_crow_out', 'clock_crow_in_div', 'clock_midi_out', 'link_quantum', 'clock_crow_out_div' }) do params:add_number(id, id, 0, 16, 1); params:hide(id) end
+for _, id in ipairs({ 'clock_crow_out', 'clock_crow_in_div', 'clock_midi_out', 'link_quantum', 'clock_crow_out_div', 'clock_link_quantum', 'clock_link_start_stop_sync', 'clock_midi_out_1', 'clock_midi_out_2', 'clock_midi_out_3', 'clock_midi_out_4', 'clock_midi_out_5', 'clock_midi_out_6', 'clock_midi_out_7', 'clock_midi_out_8', 'clock_midi_out_9', 'clock_midi_out_10', 'clock_midi_out_11', 'clock_midi_out_12', 'clock_midi_out_13', 'clock_midi_out_14', 'clock_midi_out_15', 'clock_midi_out_16', 'clock_crow_out_1', 'clock_crow_out_2', 'clock_crow_out_3', 'clock_crow_out_4' }) do params:add_number(id, id, 0, 16, 1); params:hide(id) end
 -- system audio params (dB like norns) mapped onto the mixer
 local function dbamp(db) if db <= -60 then return 0 end return 10 ^ (db / 20) end
 local DBSPEC = controlspec.new(-math.huge, 6, 'db', 0, 0, 'dB')
@@ -426,9 +448,15 @@ for _, id in ipairs({ 'rev_pre_delay', 'rev_lf_fc', 'rev_low_time', 'rev_mid_tim
   params:add_number(id, id, -1000, 20000, 0); params:hide(id)
 end
 params._system_count = #params.params
+local MIXMAP = { output = 'output_level', input = 'input_level', monitor = 'monitor_level', engine = 'engine_level', cut = 'softcut_level', softcut = 'softcut_level', tape = 'tape_level' }
+mix = setmetatable({}, { __index = function(t, k)
+  local f = params[k]
+  if type(f) ~= 'function' then return nil end
+  return function(self, id, ...) return f(params, MIXMAP[id] or id, ...) end
+end })
 
 -- grid ------------------------------------------------------------------------
-grid = { vports = {} }
+grid = { vports = {}, devices = {}, update_devices = function() end, add = nil, remove = nil }
 local G = {}; G.__index = G
 local gdev = setmetatable({ cols = 16, rows = 8, name = 'monome 128', id = 1, port = 1, device = { cols = 16, rows = 8, name = 'monome 128', id = 1, port = 1 } }, G)
 grid.vports[1] = gdev
@@ -450,6 +478,8 @@ arc = { vports = {} }
 local A = {}; A.__index = A
 local adev = setmetatable({ name = 'monome arc 4', id = 1, port = 1, device = { name = 'monome arc 4' } }, A)
 arc.vports[1] = adev
+arc.devices = {}
+arc.update_devices = function() end
 function arc.connect(n) __used('arc'); return adev end
 function A:led(r, x, l) __a_led(r, x, l) end
 function A:all(l) __a_all(l) end
@@ -463,13 +493,13 @@ function __arc_key(n, z) if adev.key then safe(adev.key, n, z) end end
 local function null_device(name)
   return setmetatable({ name = 'none', device = nil }, { __index = function() return function() end end })
 end
-midi = { vports = {}, devices = {} }
+midi = setmetatable({ vports = {}, devices = {} }, { __index = function() return function() end end })
 for i = 1, 16 do midi.vports[i] = null_device('midi') end
 function midi.connect() return null_device('midi') end
 function midi.to_msg() return {} end
 function midi.to_data() return {} end
-hid = { vports = {}, devices = {}, connect = function() return null_device('hid') end }
-keyboard = { code = {}, char = function() end, state = {} }
+hid = { vports = { null_device('hid'), null_device('hid'), null_device('hid'), null_device('hid') }, devices = {}, update_devices = function() end, connect = function() return null_device('hid') end, codes = KEYCODES, types = setmetatable({}, { __index = function() return 1 end }) }
+keyboard = { code = function() end, char = function() end, state = {}, codes = KEYCODES, shift = function() return false end, ctrl = function() return false end, alt = function() return false end, meta = function() return false end }
 gamepad = {}
 
 -- audio -----------------------------------------------------------------------
@@ -498,6 +528,8 @@ function Poll:start() self.running = true; self.next = _now; active_polls[self] 
 function Poll:stop() self.running = false; active_polls[self] = nil end
 function Poll:update() if self.callback then safe(self.callback, __poll_value(self.name)) end end
 function Poll:set_time(t) self.time = t end
+function poll.clear_all() for p in pairs(active_polls) do p:stop() end end
+poll.clear_all_ = poll.clear_all
 
 -- softcut ---------------------------------------------------------------------
 softcut = setmetatable({ VOICE_COUNT = 6, BUFFER_SIZE = 2 ^ 22 / 48000 }, { __index = function(t, k)
@@ -526,16 +558,21 @@ function softcut.params() return {} end
 crow = require 'crow_emu'
 package.preload['crow'] = function() return crow end
 package.preload['audio'] = function() return audio end
+package.preload['cjson'] = function() return require 'cjson_emu' end
+package.preload['cjson.safe'] = package.preload['cjson']
+package.preload['params/option'] = function() return require 'param_option' end
+package.preload['core/params/option'] = package.preload['params/option']
 package.preload['core/audio'] = package.preload['audio']
 package.preload['script'] = function() return norns.script end
 package.preload['encoders'] = function() return norns.encoders end
 package.preload['core/keyboard'] = function() return keyboard end
-package.preload['hid_events'] = function() return { codes = {}, types = {} } end
+package.preload['hid_events'] = function() return { codes = KEYCODES, types = hid.types } end
 package.preload['core/hid_events'] = package.preload['hid_events']
 package.preload['core/midi'] = function() return midi end
 package.preload['container/deque'] = function() return require 'container_deque' end
 package.preload['container.deque'] = package.preload['container/deque']
 norns.crow.public = crow.public
+for _, k in ipairs({ 'loadscript', 'send', 'reset', 'init', 'version', 'identity', 'clear' }) do if not norns.crow[k] then norns.crow[k] = function(...) local f = crow[k]; if f then return f(...) end end end end
 package.preload['core/crow'] = package.preload['crow']
 package.preload['we/lib/polysub'] = function() return require 'polysub' end
 function __crow_input(n, v) crow._input(n, v) end

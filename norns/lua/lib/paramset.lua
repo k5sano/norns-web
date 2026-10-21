@@ -160,7 +160,10 @@ function Param:bang()
   if self.t == TYPES.trigger then safe(self.action, 1)
   elseif self.t ~= TYPES.separator and self.t ~= TYPES.group then safe(self.action, self.value) end
 end
-function Param:get_range() return self.min, self.max end
+function Param:get_range() return { self.min, self.max } end
+function Param:map_value(x) if self.controlspec then return self.controlspec:map(x) end return self.min + (self.max - self.min) * x end
+function Param:get_save() return self.save ~= false end
+function Param:set_save(b) self.save = b end
 function Param:set_default() if self.default ~= nil then self:set(self.default) end end
 function Param:get_delta() return 1 end
 
@@ -196,7 +199,7 @@ function ParamSet:add(args)
     p.min = args.min or 0; p.max = args.max or 127; p.wrap = args.wrap
     p.default = args.default or p.min; p.value = math.floor(p.default + 0.5)
   elseif t == TYPES.option then
-    p.options = args.options or {}; p.min = 1; p.max = #p.options
+    p.options = args.options or {}; p.min = 1; p.max = #p.options; p.count = #p.options
     p.default = args.default or 1; p.value = p.default
   elseif t == TYPES.control then
     local cs = args.controlspec or controlspec.new(args.min or 0, args.max or 1, args.warp or 'lin', args.step or 0, args.default or args.min or 0, args.units or '')
@@ -253,6 +256,8 @@ function ParamSet:get_id(i) local p = self.params[i]; return p and p.id end
 function ParamSet:t(id) return need(self, id).t end
 function ParamSet:get_allow_pmap(id) return true end
 function ParamSet:lookup_param(id) return need(self, id) end
+function ParamSet:set_save(id, b) local p = self:_find(id); if p then p.save = b end end
+function ParamSet:get_save(id) local p = self:_find(id); return p and p.save ~= false end
 function ParamSet:hide(id) local p = self:_find(id); if p then self.hidden[p] = true end end
 function ParamSet:show(id) local p = self:_find(id); if p then self.hidden[p] = nil end end
 function ParamSet:visible(id) local p = self:_find(id); return p and not self.hidden[p] end

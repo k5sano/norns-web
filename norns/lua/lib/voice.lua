@@ -4,9 +4,10 @@ local Slot = {}; Slot.__index = Slot
 function Voice.new(n, mode)
   local v = setmetatable({ count = n or 1, style = mode or 1, slots = {}, n = 0 }, Voice)
   for i = 1, v.count do v.slots[i] = setmetatable({ pool = v, id = i, active = false, n = 0, on_release = function() end, on_steal = function() end }, Slot) end
+  v.style = { slots = v.slots, mode = mode or 1 }
   return v
 end
-Voice.ROTATE = 1; Voice.RANDOM = 2; Voice.LRU = 3; Voice.ROUND_ROBIN = 1
+Voice.MODE_ROTATE = 1; Voice.MODE_RANDOM = 2; Voice.MODE_LRU = 3; Voice.ROTATE = 1; Voice.RANDOM = 2; Voice.LRU = 3; Voice.ROUND_ROBIN = 1
 function Voice:get()
   self.n = self.n + 1
   local best
@@ -18,6 +19,8 @@ function Voice:get()
   best.active = true; best.n = self.n
   return best
 end
+function Voice:push(id, slot) self.keyed = self.keyed or {}; self.keyed[id] = slot end
+function Voice:pop(id) self.keyed = self.keyed or {}; local s = self.keyed[id]; self.keyed[id] = nil; return s end
 function Voice:release(slot) if slot then slot:release() end end
 function Slot:release() if self.active then self.active = false; pcall(self.on_release, self) end end
 return Voice

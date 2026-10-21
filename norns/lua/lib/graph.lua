@@ -11,6 +11,14 @@ function Graph.new(x_min, x_max, x_warp, y_min, y_max, y_warp, style, show_x_axi
 end
 function Graph:set_position_and_size(x, y, w, h) self.x, self.y, self.width, self.height = x, y, w, h end
 function Graph:set_active(a) self.active = a end
+function Graph:set_show_x_axis(b) self.show_x_axis = b end
+function Graph:set_show_y_axis(b) self.show_y_axis = b end
+function Graph:set_x_warp(w) self.x_warp = w end
+function Graph:set_y_warp(w) self.y_warp = w end
+function Graph:get_width() return self.width end
+function Graph:get_height() return self.height end
+function Graph:get_x() return self.x end
+function Graph:get_y() return self.y end
 function Graph:get_x_min() return self.x_min end
 function Graph:get_x_max() return self.x_max end
 function Graph:get_y_min() return self.y_min end

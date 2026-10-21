@@ -307,7 +307,7 @@ end
 crow.clear = crow.reset
 crow.init = function() end
 function crow.send(s) warn('send', 'crow.send(...) で送る crow 側スクリプトは実行されません') end
-function crow.loadscript() warn('loadscript', 'crow.loadscript はエミュレートされません') end
+function crow.loadscript(name) warn('loadscript', 'crow.loadscript(' .. tostring(name) .. ') の crow 側スクリプトは実行されません') end
 crow.version = function() return 'web' end
 crow.ii = setmetatable({}, { __index = function(t, k)
   warn('ii', 'crow.ii (i2c 機器) はエミュレートされず、呼び出しは無視されます')

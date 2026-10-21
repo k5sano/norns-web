@@ -113,6 +113,22 @@ function MusicUtil.generate_chord_scale_degree(root, mode, degree, seventh)
   if seventh then out[#out + 1] = sc[d + 6] end
   return out
 end
+local ROMAN = { i = 1, ii = 2, iii = 3, iv = 4, v = 5, vi = 6, vii = 7 }
+function MusicUtil.generate_chord_roman(root, scale_type, roman)
+  roman = tostring(roman or 'I')
+  local base = roman:match('^[b#]?([ivIV]+)') or 'I'
+  local deg = ROMAN[base:lower()] or 1
+  local flat = roman:sub(1, 1) == 'b' and -1 or (roman:sub(1, 1) == '#' and 1 or 0)
+  local sc = MusicUtil.generate_scale_of_length(root, scale_type, 16)
+  local r = sc[deg] + flat
+  local minor = base == base:lower()
+  local rest = roman:sub(#base + (flat ~= 0 and 2 or 1))
+  local name = minor and 'Minor' or 'Major'
+  if rest:find('°') or rest:find('o') or rest:find('dim') then name = 'Diminished' end
+  if rest:find('7') then name = (name == 'Major' and (rest:find('M') and 'Major 7' or 'Dominant 7')) or (name == 'Minor' and 'Minor 7' or 'Diminished 7') end
+  if rest:find('%+') then name = 'Augmented' end
+  return MusicUtil.generate_chord(r, name)
+end
 function MusicUtil.chord_types_for_note() return {} end
 function MusicUtil.note_num_to_freq(n) return 440 * 2 ^ ((n - 69) / 12) end
 function MusicUtil.note_nums_to_freqs(t) local r = {} for i, n in ipairs(t) do r[i] = MusicUtil.note_num_to_freq(n) end return r end
