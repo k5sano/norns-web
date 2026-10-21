@@ -311,6 +311,7 @@ function initAudio() {
   A.anaL = AC.createAnalyser(); A.anaR = AC.createAnalyser(); A.anaL.fftSize = A.anaR.fftSize = 1024;
   A.mix.connect(A.dac);
   A.out.connect(AC.destination);
+  AC.onstatechange = updateAudioHint;
   A.out.connect(A.splitOut); A.splitOut.connect(A.anaL, 0); A.splitOut.connect(A.anaR, 1);
   A.eng = gain(1);
   A.engOut = gain(1); A.eng.connect(A.engOut).connect(A.mix);
@@ -351,12 +352,30 @@ function mixNative(name, a) {
     applyMix();
   }
 }
+let audioMuted = false, audioLogged = '';
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+function unlockAudio() {
+  // a one-sample buffer played inside the gesture unlocks iOS / Safari
+  try { const b = AC.createBuffer(1, 1, AC.sampleRate), s = AC.createBufferSource(); s.buffer = b; s.connect(AC.destination); s.start(0); } catch (e) {}
+}
 function resumeAudio() {
+  if (audioMuted) return;
   initAudio();
-  if (AC && AC.state !== 'running') AC.resume().then(updateAudioHint).catch(() => {});
+  if (!AC) return;
+  if (AC.state !== 'running') {
+    unlockAudio();
+    AC.resume().then(updateAudioHint).catch(e => warnOnce('audio-resume', '音声を開始できませんでした: ' + (e && e.message || e)));
+  }
   updateAudioHint();
 }
-function updateAudioHint() { $('audioHint').hidden = !!(AC && AC.state === 'running'); }
+function updateAudioHint() {
+  const on = !!(AC && AC.state === 'running');
+  $('audioHint').hidden = on || audioMuted;
+  const b = $('soundBtn');
+  if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = on ? '音 ON' : '音 OFF'; b.title = on ? 'クリックで音を止める' : 'クリックで音を出す'; }
+  const st = AC ? AC.state : 'none';
+  if (st === 'running' && !audioLogged) { audioLogged = st; log('# 音声: 出力中（' + AC.sampleRate + ' Hz）', 's'); }
+}
 
 /* ---- softcut facade ---- */
 const SC = { node: null, core: null, ready: false, queue: [], pending: new Map(), id: 0 };
@@ -1114,6 +1133,16 @@ window.addEventListener('keyup', e => {
   if (m && m[0] === 'k') { document.querySelector(`.key[data-k="${m[1]}"]`).classList.remove('down'); sendKey(m[1], 0); }
 });
 window.addEventListener('pointerdown', resumeAudio, true);
+window.addEventListener('touchend', resumeAudio, true);
+window.addEventListener('click', resumeAudio, true);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC && AC.state === 'suspended' && !audioMuted && navigator.userActivation && navigator.userActivation.hasBeenActive) AC.resume().catch(() => {}); });
+$('soundBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  initAudio();
+  if (!AC) { report('このブラウザでは音声を出せません'); return; }
+  if (AC.state === 'running') { audioMuted = true; AC.suspend().then(updateAudioHint); }
+  else { audioMuted = false; unlockAudio(); AC.resume().then(updateAudioHint).catch(err => report('音声を開始できませんでした: ' + (err && err.message || err))); }
+}, true);
 
 /* ============ editor ============ */
 const srcEl = $('src'), fileSel = $('file');

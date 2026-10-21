@@ -115,7 +115,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font
         <h2><span class="n">01</span>はじめに</h2>
         <ol class="steps">
           <li>ページを開くと、サンプルの <code>step</code>（8ステップのシーケンサー）が自動で動き出します。</li>
-          <li>画面のどこかを一度クリックすると音が出ます。ブラウザの決まりで、操作するまでは無音です。</li>
+          <li>画面のどこかを一度クリックすると音が出ます。ブラウザの決まりで、操作するまでは無音です。右上のボタンが「音 ON」（緑）なら出力中です。</li>
           <li>右の「ライブラリ」タブから、norns.community のスクリプトを選んで「インストール」を押すと、取り込んですぐ起動します。</li>
         </ol>
         <p>パソコンの Chrome / Edge / Safari / Firefox で動きます。スマホでも動きますが、エンコーダーやグリッドの操作はパソコンの方が快適です。実機グリッドの接続はパソコン版の Chrome と Edge だけです。</p>
@@ -305,7 +305,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font
         <div class="tbl"><table>
           <thead><tr><th>症状</th><th>確認すること</th></tr></thead>
           <tbody>
-            <tr><td>音が出ない</td><td>画面を一度クリックしたか。MIX ページの音量。スクリプトが PolyPerc 以外のエンジンなら、代替音か無音のことがあります。</td></tr>
+            <tr><td>音が出ない</td><td>右上のボタンが「音 ON」（緑）になっているか。「音 OFF」ならクリックします。iPhone / iPad は本体の消音スイッチがオンだと鳴らないことがあります。ほかに、パソコンの出力先、MIX ページの音量も確認します。PolyPerc 以外のエンジンを使うスクリプトは、代替音か無音のことがあります。</td></tr>
             <tr><td>右上が赤くなった</td><td>MATRON 欄のエラーを見ます。<code>include: … が見つかりません</code> は必要なファイルや別プロジェクトがない状態です。</td></tr>
             <tr><td>インストールが失敗する</td><td>回数の上限（1時間約60回）か、ネットワークの問題です。表示された時刻以降にもう一度押します。</td></tr>
             <tr><td>動きが止まった</td><td>■ 停止 → ▶ 実行 で起動し直します。無限ループは自動で中断され、MATRON に timeout と出ます。</td></tr>

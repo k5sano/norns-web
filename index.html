@@ -38,6 +38,8 @@ body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size
 .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
 .top-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .manual-link{font-size:13px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 12px;background:var(--ground-2)}
+.sound-btn{font-family:var(--f-mono);cursor:pointer;line-height:1.5}
+.sound-btn[aria-pressed="true"]{color:#111316;background:var(--ok);border-color:var(--ok)}
 .manual-link:hover{border-color:var(--line-2)}
 .manual-link:focus-visible{outline:2px solid var(--oled);outline-offset:2px}
 .status{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
@@ -193,6 +195,7 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
     <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · LUA 5.3 · SOFTCUT · CROW</span></div>
     <div class="top-right">
       <div class="status" id="status"><i></i><span id="statusText">起動中</span></div>
+      <button class="manual-link sound-btn" id="soundBtn" aria-pressed="false" title="クリックで音を出す">音 OFF</button>
       <a class="manual-link" href="manual.html" target="_blank" rel="noopener">マニュアル</a>
     </div>
   </header>
@@ -202,7 +205,7 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
       <div class="device">
         <div class="screen-well">
           <canvas id="oled" width="768" height="384" aria-label="norns 128×64 OLED"></canvas>
-          <div class="tag audio-hint" id="audioHint">タップで音が出ます</div>
+          <div class="tag audio-hint" id="audioHint">クリック / タップで音が出ます</div>
         </div>
         <div class="controls">
           <div class="ctl k1"><button class="key" data-k="1" aria-label="K1"></button><span>K1</span></div>
