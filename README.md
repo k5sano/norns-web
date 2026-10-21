@@ -7,6 +7,7 @@ monome norns のブラウザ版エミュレータ。Lua スクリプトをその
 - softcut（6 ボイス・2 バッファ）、PolyPerc ほか簡易エンジン
 - clock / metro / params / sequins / lattice / lfo などのコアライブラリ
 - norns.community のカタログからワンクリックで GitHub から取り込み（git submodule 含む）
+- 実機の monome grid を USB で接続（Chrome / Edge の Web Serial）。mext（2011年以降）・series（2007–2010）・40h に対応し、16段階 / 4段階 / 単色の階調としきい値を設定可能
 
 ## 使い方
 

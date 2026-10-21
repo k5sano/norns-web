@@ -694,8 +694,9 @@ function drawGrid() {
   if (!w || !h) return;
   gctx.clearRect(0, 0, w, h);
   const cw = w / 16, ch = h / 8, inset = cw * 0.1, r = cw * 0.16;
+  const view = (window.NornsHW && window.NornsHW.preview) ? window.NornsHW.preview(gShown) : gShown;
   for (let y = 0; y < 8; y++) for (let x = 0; x < 16; x++) {
-    const px = x * cw + inset, py = y * ch + inset, s = cw - inset * 2, l = gShown[y * 16 + x];
+    const px = x * cw + inset, py = y * ch + inset, s = cw - inset * 2, l = view[y * 16 + x];
     gctx.beginPath();
     gctx.roundRect ? gctx.roundRect(px, py, s, s, r) : gctx.rect(px, py, s, s);
     gctx.fillStyle = PAD; gctx.globalAlpha = 1; gctx.shadowBlur = 0; gctx.fill();
@@ -707,7 +708,7 @@ const lv = l => Math.max(0, Math.min(15, Math.floor(+l || 0)));
 const gridFns = {
   __g_led(x, y, l) { x = Math.floor(x) - 1; y = Math.floor(y) - 1; if (x < 0 || x > 15 || y < 0 || y > 7) return; gBuf[y * 16 + x] = lv(l); },
   __g_all(l) { gBuf.fill(lv(l)); },
-  __g_refresh() { gShown.set(gBuf); drawGrid(); },
+  __g_refresh() { gShown.set(gBuf); drawGrid(); if (window.NornsHW) window.NornsHW.frame(gShown); },
 };
 const gridHeld = new Map();
 function gridCell(e) {
@@ -889,7 +890,7 @@ function resetDevices() {
   for (const k in devUsed) devUsed[k] = false;
   devAutoSwitched = false;
   document.querySelectorAll('.devtab').forEach(t => t.classList.remove('used'));
-  gBuf.fill(0); gShown.fill(0); drawGrid();
+  gBuf.fill(0); gShown.fill(0); drawGrid(); if (window.NornsHW) window.NornsHW.frame(gShown);
   aBuf.fill(0); aShown.fill(0); drawArc();
   crowOut.fill(0); crowDirty = true; updateListen();
 }
@@ -1500,6 +1501,16 @@ picker.addEventListener('change', () => { importFiles([...picker.files]); picker
 drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) importFiles([...e.dataTransfer.files]); });
 window.addEventListener('dragover', e => e.preventDefault());
 window.addEventListener('drop', e => { e.preventDefault(); if (e.target.closest && e.target.closest('#drop')) return; if (e.dataTransfer && e.dataTransfer.files.length) { showView('library'); importFiles([...e.dataTransfer.files]); } });
+
+/* ============ hooks for hardware controllers (hwgrid.js) ============ */
+window.NornsEmu = {
+  gridKey(x, y, z) { callLua('__grid_key', x, y, z); },
+  redrawGrid() { drawGrid(); },
+  frame() { return gShown; },
+  log: (m) => log('# ' + m, 's'),
+  error: (m) => report(m),
+  resumeAudio: () => resumeAudio(),
+};
 
 /* ============ boot ============ */
 async function fetchBytes(p) { const r = await fetch(p); if (!r.ok) throw new Error(p + ' ' + r.status); return new Uint8Array(await r.arrayBuffer()); }

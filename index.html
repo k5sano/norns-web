@@ -79,6 +79,30 @@ body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size
 .tabs button[aria-selected="true"]{color:var(--ink);border-color:var(--line-2);background:var(--ground-3)}
 .devtab.used::after{content:"";position:absolute;top:4px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--led)}
 .devpanel{display:flex;flex-direction:column;gap:10px}
+/* hardware grid */
+.hw-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.hw-status{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.hw-status.on{color:var(--ok)}
+details.hw{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--ground-3)}
+details.hw summary{cursor:pointer;font-size:12.5px;color:var(--ink)}
+.hw-grid{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 14px;align-items:center;margin:12px 0 10px;font-size:12.5px}
+.hw-grid>label{color:var(--muted)}
+.hw-grid select{width:100%}
+.hw-range{display:flex;align-items:center;gap:8px;min-width:0}
+.hw-range input{flex:1;min-width:0;accent-color:var(--led)}
+.hw-range output,.hw-outs output{font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:2ch;text-align:right;color:var(--ink)}
+.hw-range small{color:var(--muted);min-width:5em}
+.hw-outs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr) auto);gap:6px;align-items:center}
+.hw-outs input{min-width:0;width:100%;accent-color:var(--led)}
+.hw-strip{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.hw-cell{position:relative;aspect-ratio:1;border-radius:3px;background:var(--pad);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:9px;line-height:1.1;overflow:hidden}
+.hw-cell::before{content:"";position:absolute;inset:0;background:var(--led);opacity:var(--a,0)}
+.hw-cell span,.hw-cell b{position:relative;color:var(--ink);mix-blend-mode:difference}
+.hw-cell b{font-weight:500;font-size:9.5px}
+.hw-check{display:flex;gap:6px;align-items:center;color:var(--muted)}
+.hw-actions{display:flex;flex-wrap:wrap;gap:8px}
+#hwTest.down{background:var(--led);color:#1a1300;border-color:var(--led)}
+@media (max-width:520px){.hw-grid{grid-template-columns:minmax(0,1fr)}.hw-strip{gap:2px}.hw-cell{font-size:8px}}
 #grid{display:block;width:100%;max-width:100%;aspect-ratio:2/1;touch-action:none;cursor:pointer}
 #arc{display:block;width:100%;max-width:100%;aspect-ratio:4/1;touch-action:none;cursor:grab}
 #crow{display:block;width:100%;max-width:100%;aspect-ratio:2.6/1}
@@ -192,6 +216,70 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
         </div>
         <div class="devpanel" data-dev="grid">
           <canvas id="grid" aria-label="monome grid 16×8"></canvas>
+          <div class="hw-bar">
+            <button id="hwConnect">USB grid に接続</button>
+            <span id="hwStatus" class="hw-status">未接続</span>
+          </div>
+          <details class="hw" id="hwPanel">
+            <summary>実機グリッドの設定</summary>
+            <div class="hw-grid">
+              <label for="hwProto">プロトコル</label>
+              <select id="hwProto">
+                <option value="auto">自動判別</option>
+                <option value="mext">mext（2011年以降）</option>
+                <option value="series">series（2007–2010 の 64 / 128 / 256）</option>
+                <option value="40h">40h（2006 / arduinome）</option>
+              </select>
+              <label for="hwSize">サイズ</label>
+              <select id="hwSize">
+                <option value="auto">自動（mext のみ）</option>
+                <option value="64">64（8×8）</option>
+                <option value="128">128（16×8）</option>
+                <option value="256">256（16×16 の上半分を使用）</option>
+              </select>
+              <label for="hwBaud">通信速度</label>
+              <select id="hwBaud">
+                <option value="115200">115200（monome 純正）</option>
+                <option value="57600">57600（arduinome）</option>
+              </select>
+              <label for="hwRot">向き</label>
+              <select id="hwRot">
+                <option value="0">そのまま</option>
+                <option value="180">180°回転（ケーブルが左）</option>
+              </select>
+              <label for="hwMode">階調</label>
+              <select id="hwMode">
+                <option value="16">16段階（varibright）</option>
+                <option value="4">4段階</option>
+                <option value="2">点灯 / 消灯のみ（初代・単色）</option>
+              </select>
+              <label class="hw-2" for="hwMono">点灯するレベル</label>
+              <div class="hw-2 hw-range"><input type="range" id="hwMono" min="1" max="15" step="1"><output id="hwMonov"></output><small>以上で点灯</small></div>
+              <label class="hw-4" for="hwT1">段階1（暗）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT1" min="1" max="15" step="1"><output id="hwT1v"></output><small>以上</small></div>
+              <label class="hw-4" for="hwT2">段階2（中）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT2" min="1" max="15" step="1"><output id="hwT2v"></output><small>以上</small></div>
+              <label class="hw-4" for="hwT3">段階3（明）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT3" min="1" max="15" step="1"><output id="hwT3v"></output><small>以上</small></div>
+              <label>対応表</label>
+              <div class="hw-strip" id="hwStrip" aria-label="スクリプトのレベル 0–15 と実機の点灯"></div>
+              <label class="hw-4" for="hwO1">送る値 1 / 2 / 3</label>
+              <div class="hw-4 hw-outs">
+                <input type="range" id="hwO1" min="1" max="15" step="1" aria-label="段階1で送る値"><output id="hwO1v"></output>
+                <input type="range" id="hwO2" min="1" max="15" step="1" aria-label="段階2で送る値"><output id="hwO2v"></output>
+                <input type="range" id="hwO3" min="1" max="15" step="1" aria-label="段階3で送る値"><output id="hwO3v"></output>
+              </div>
+              <label for="hwBright">明るさ</label>
+              <div class="hw-range"><input type="range" id="hwBright" min="0" max="15" step="1"><output id="hwBrightv"></output><small></small></div>
+              <span></span>
+              <label class="hw-check"><input type="checkbox" id="hwMirror"> 画面のグリッドも同じ階調で表示</label>
+            </div>
+            <div class="hw-actions">
+              <button id="hwTest" title="押している間、左から右へレベル 0〜15 を表示します">押している間テスト表示</button>
+              <button id="hwReset">初期設定に戻す</button>
+            </div>
+            <p class="small">テスト表示では、左の列から順にレベル 0〜15 を出します。実機でどの列から光るかを見ながら、しきい値を合わせてください。serialosc など、ほかのソフトがグリッドを使っている間は接続できません。</p>
+          </details>
         </div>
         <div class="devpanel" data-dev="arc" hidden>
           <canvas id="arc" aria-label="monome arc 4 リング"></canvas>
@@ -288,6 +376,7 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
 <script src="norns/softcut.js"></script>
 <script src="norns/examples.js"></script>
 <script src="norns/app.js"></script>
+<script src="norns/hwgrid.js"></script>
 
 </body>
 </html>
