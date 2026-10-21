@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>norns-web Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap">
+<style>
+:root{
+  /* layout: sticky contents rail on the left, single reading column on the right; rail collapses to a top list on phones */
+  --ground:#141517;
+  --ground-2:#1b1c1f;
+  --ground-3:#0f1012;
+  --ink:#dfe2dc;
+  --muted:#8d918a;
+  --line:#2d2f33;
+  --oled:#eaf2ff;
+  --led:#f4b13e;
+  --ok:#a6d49f;
+  --f-ui:"IBM Plex Sans JP", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.75}
+a{color:var(--oled)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--oled);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.logo{font-family:var(--f-mono);font-weight:500;font-size:26px;letter-spacing:.02em}
+.sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.hdr-links{display:flex;gap:8px;flex-wrap:wrap}
+.back{font-family:var(--f-mono);font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;color:var(--ink);background:var(--ground-2)}
+.back:hover{border-color:#44474c}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;align-items:start}
+nav.toc{position:sticky;top:20px;font-size:13px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line)}
+nav.toc a{display:block;padding:3px 0 3px 14px;color:var(--muted);text-decoration:none;margin-left:-1px;border-left:1px solid transparent}
+nav.toc a:hover{color:var(--ink);border-left-color:var(--led)}
+nav.toc .label{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:24px}
+  nav.toc{position:static}
+  nav.toc ol{flex-direction:row;flex-wrap:wrap;border-left:0;gap:6px}
+  nav.toc a{border:1px solid var(--line);border-radius:5px;padding:3px 9px;margin:0}
+}
+main{min-width:0;max-width:72ch}
+h1{font-size:30px;line-height:1.3;margin:0 0 10px;text-wrap:balance;font-weight:600}
+.lede{color:var(--muted);margin:0 0 34px}
+section{padding-top:8px;margin-bottom:44px;scroll-margin-top:16px}
+h2{font-size:21px;line-height:1.4;margin:0 0 14px;font-weight:600;text-wrap:balance;display:flex;align-items:baseline;gap:12px}
+h2 .n{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--led);letter-spacing:.08em}
+h3{font-size:15.5px;margin:26px 0 8px;font-weight:600}
+p{margin:0 0 12px}
+ul,ol.steps{margin:0 0 14px;padding-left:1.3em}
+li{margin:3px 0}
+ol.steps li{margin:6px 0}
+code,kbd{font-family:var(--f-mono);font-size:.88em}
+code{background:var(--ground-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+kbd{display:inline-block;min-width:1.7em;text-align:center;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--ground-2);color:var(--ink)}
+.tbl{overflow-x:auto;margin:6px 0 18px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;line-height:1.6}
+th,td{text-align:left;vertical-align:top;padding:8px 12px;border-top:1px solid var(--line)}
+thead th{border-top:0;background:var(--ground-2);font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em}
+td:first-child{white-space:nowrap}
+.note{border-left:2px solid var(--led);background:var(--ground-2);padding:10px 14px;border-radius:0 6px 6px 0;margin:12px 0 16px;font-size:14px}
+.note strong{color:var(--led);font-weight:500}
+.panel-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:8px 0 18px}
+@media (max-width:560px){.panel-map{grid-template-columns:minmax(0,1fr)}}
+.panel-map div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--ground-3);font-size:13.5px;line-height:1.6}
+.panel-map b{display:block;font-family:var(--f-mono);font-weight:500;font-size:12px;letter-spacing:.08em;color:var(--oled);margin-bottom:2px}
+.levels{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;margin:8px 0 4px;max-width:520px}
+.levels span{aspect-ratio:1;border-radius:3px;background:#26272b;position:relative;font-family:var(--f-mono);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.levels span::before{content:"";position:absolute;inset:0;border-radius:3px;background:var(--led);opacity:var(--a,0)}
+.levels span i{position:relative;font-style:normal;mix-blend-mode:difference}
+.cap{font-size:12.5px;color:var(--muted);margin:0 0 16px}
+footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · MANUAL</span></div>
+    <div class="hdr-links"><a class="back" href="manual.html" lang="ja">日本語</a><a class="back" href="./">← Back to the emulator</a></div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Contents">
+      <p class="label">CONTENTS</p>
+      <ol>
+        <li><a href="#start">Getting started</a></li>
+        <li><a href="#screen">The screen</a></li>
+        <li><a href="#controls">Controls</a></li>
+        <li><a href="#menu">System menu</a></li>
+        <li><a href="#library">Installing scripts</a></li>
+        <li><a href="#editor">Editor and REPL</a></li>
+        <li><a href="#devices">grid · arc · crow</a></li>
+        <li><a href="#usbgrid">Hardware grid</a></li>
+        <li><a href="#audio">Sound and softcut</a></li>
+        <li><a href="#compat">Compatibility</a></li>
+        <li><a href="#data">Where data is kept</a></li>
+        <li><a href="#trouble">Troubleshooting</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <h1>norns-web manual</h1>
+      <p class="lede">An emulator that runs monome norns Lua scripts in the browser. Install scripts from norns.community and play with them, or write your own and try them out.</p>
+
+      <section id="start">
+        <h2><span class="n">01</span>Getting started</h2>
+        <ol class="steps">
+          <li>When the page opens, the sample script <code>step</code> (an 8-step sequencer) starts automatically.</li>
+          <li>Click anywhere on the page once to hear it. Browsers keep pages silent until you interact with them. The button at the top right reads “SOUND ON” (green) while audio is running.</li>
+          <li>Open the “Library” tab on the right, pick a script from norns.community and press “Install”. It is fetched and started right away.</li>
+        </ol>
+        <p>It runs in desktop Chrome, Edge, Safari and Firefox. Phones work too, but encoders and the grid are easier to use on a computer. Connecting a hardware grid needs desktop Chrome or Edge. The “日本語 / English” button at the top right switches the interface language.</p>
+      </section>
+
+      <section id="screen">
+        <h2><span class="n">02</span>The screen</h2>
+        <div class="panel-map">
+          <div><b>DEVICE (TOP LEFT)</b>The 128×64 screen, keys K1–K3, encoders E1–E3 and the MENU button.</div>
+          <div><b>CONTROLLERS (BOTTOM LEFT)</b>GRID 128 / ARC 4 / CROW tabs. Tabs the script uses get a yellow dot, and the first one used is shown automatically.</div>
+          <div><b>EDITOR (RIGHT)</b>View and edit scripts, run and stop them, MATRON (the log) and the REPL.</div>
+          <div><b>LIBRARY (RIGHT)</b>Catalog search, installing, installed projects and audio files.</div>
+        </div>
+        <p>The indicator at the top right shows the run state: green while running, red after an error. The error itself appears in MATRON.</p>
+      </section>
+
+      <section id="controls">
+        <h2><span class="n">03</span>Controls</h2>
+        <h3>Mouse and touch</h3>
+        <ul>
+          <li><strong>Keys</strong>: the script sees a press while you hold the key and a release when you let go.</li>
+          <li><strong>Encoders</strong>: drag up and down (or left and right) on a knob to turn it. The mouse wheel also works, and so do the arrow keys once the knob is focused.</li>
+          <li><strong>MENU</strong>: same as a short K1 press; opens and closes the system menu.</li>
+        </ul>
+        <h3>Keyboard</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Key</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>K1 / K2 / K3</td></tr>
+            <tr><td><kbd>Q</kbd> <kbd>W</kbd></td><td>Turn E1 left / right</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>S</kbd></td><td>Turn E2 left / right</td></tr>
+            <tr><td><kbd>Z</kbd> <kbd>X</kbd></td><td>Turn E3 left / right</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></td><td>Run the script open in the editor</td></tr>
+          </tbody>
+        </table></div>
+        <p>While you are typing in the editor or another text field, these keys type text instead of operating the device.</p>
+      </section>
+
+      <section id="menu">
+        <h2><span class="n">04</span>System menu</h2>
+        <p>A short K1 press (or MENU) opens the menu; press again to go back to the script. If you hold K1 while using another key or encoder, the menu stays closed and the script receives K1 instead. E1 switches pages.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Page</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>MIX</td><td>E2 selects a channel (out / eng / cut / rev), E3 changes its level.</td></tr>
+            <tr><td>TAPE</td><td>Not available in this version.</td></tr>
+            <tr><td>HOME</td><td>E2 selects, K3 confirms. SELECT starts a script from dust/code, SYSTEM restarts the current one, SLEEP blanks the screen. K2 goes back.</td></tr>
+            <tr><td>PARAMETERS</td><td>E2 selects, E3 changes the value. Trigger, on/off, file and text parameters use K3.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="library">
+        <h2><span class="n">05</span>Installing scripts</h2>
+        <h3>From the catalog</h3>
+        <p>The lower half of the “Library” tab is the norns.community catalog. Search by name, author or tag, and filter by verified, softcut, grid, arc, crow and more.</p>
+        <ul>
+          <li><strong>Install</strong>: fetches the script straight from GitHub into your browser and starts it. Git submodules come along, and projects the script depends on are installed too.</li>
+          <li><strong>verified</strong>: scripts that started without errors in our tests. Scripts without the label may still work.</li>
+          <li><strong>Chips</strong>: green engine names are supported; yellow “stand-in” ones play a simple substitute synth. “needs: …” names a required project, and “midi (unsupported)” means MIDI features won't work.</li>
+        </ul>
+        <div class="note"><strong>Rate limit</strong>　GitHub allows about 60 installs per hour (one per project plus one per submodule). When you hit the limit, the time you can retry is shown.</div>
+        <h3>Managing installed projects</h3>
+        <p>The “Installed · dust/code” list lets you run, update and delete projects. <strong>Update</strong> fetches the latest version from GitHub and discards your edits. <strong>Delete</strong> needs two presses.</p>
+        <h3>From files</h3>
+        <p>For scripts that are not in the catalog, drop a ZIP or .lua on the box at the top (or click it to choose a file). A ZIP is unpacked into <code>dust/code/&lt;name&gt;/</code> and the runnable script opens. Audio files (wav / aif / flac / mp3 / ogg and so on) go into <code>dust/audio/</code>, and png files into <code>dust/data/images/</code>.</p>
+      </section>
+
+      <section id="editor">
+        <h2><span class="n">06</span>Editor and REPL</h2>
+        <ul>
+          <li>Pick a file from <code>dust/code</code> in the drop-down. Edits are saved automatically.</li>
+          <li><strong>▶ Run</strong> (<kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd>) starts the current file, <strong>■ Stop</strong> stops it. <kbd>Tab</kbd> inserts two spaces.</li>
+          <li><strong>+ New</strong> creates a script called <code>untitledN</code>.</li>
+          <li><strong>Revert</strong> restores a bundled sample to its original.</li>
+        </ul>
+        <p>MATRON shows <code>print</code> output and errors. The <code>&gt;&gt;</code> field at the bottom is a REPL: it runs one line of Lua inside the running script.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Example</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td><code>engine.hz(440)</code></td><td>Plays one note at 440 Hz</td></tr>
+            <tr><td><code>params:get('clock_tempo')</code></td><td>Shows the current tempo</td></tr>
+            <tr><td><code>params:set('clock_tempo', 140)</code></td><td>Changes the tempo</td></tr>
+            <tr><td><code>tab.print(params.lookup)</code></td><td>Lists parameter IDs</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="devices">
+        <h2><span class="n">07</span>grid · arc · crow</h2>
+        <h3>GRID 128</h3>
+        <p>Clicking or tapping the 16×8 pads calls the script's <code>g.key(x, y, z)</code>. Several fingers can press at once. To use a real grid, see the next section.</p>
+        <h3>ARC 4</h3>
+        <p>Drag around the outside of a ring for <code>a.delta(n, d)</code>, press the center knob for <code>a.key(n, z)</code>. The mouse wheel turns rings too.</p>
+        <h3>CROW</h3>
+        <ul>
+          <li><strong>OUT 1–4</strong>: bars show the output voltage (−5 to +10 V).</li>
+          <li><strong>IN 1 / IN 2</strong>: sliders set the input voltage. The “5V” button is a gate that stays at 5 V while held.</li>
+          <li><strong>Listen</strong>: plays OUT 1 as pitch (V/oct) and OUT 2 as level (VCA).</li>
+        </ul>
+        <p><code>crow.ii</code> (i2c devices) and scripts that run on crow itself (<code>crow.loadscript</code> and the like) are ignored.</p>
+      </section>
+
+      <section id="usbgrid">
+        <h2><span class="n">08</span>Hardware grid</h2>
+        <p>A real monome grid can be connected over USB and used as the emulator's grid. This needs desktop Chrome or Edge.</p>
+        <ol class="steps">
+          <li>Quit serialosc or any other software that is using the grid.</li>
+          <li>Press “Connect USB grid” in the GRID 128 tab and choose the grid from the list.</li>
+          <li>Once it shows “connected”, keys and LEDs are linked to the script.</li>
+        </ol>
+        <h3>Models and protocols</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Setting</th><th>For</th></tr></thead>
+          <tbody>
+            <tr><td>Auto-detect</td><td>Uses mext if the grid answers, otherwise series.</td></tr>
+            <tr><td>mext</td><td>Grids from 2011 on. The size is detected automatically.</td></tr>
+            <tr><td>series</td><td>monome 64 / 128 / 256 from 2007–2010. Choose the size yourself.</td></tr>
+            <tr><td>40h</td><td>The 2006 40h and arduinome (choose 57600 baud).</td></tr>
+          </tbody>
+        </table></div>
+        <p>A 256 uses its top 16×8. If you place the grid with the cable on the other side, set rotation to 180°.</p>
+        <h3>Brightness steps and thresholds</h3>
+        <p>Scripts set LED brightness as one of 16 levels, 0–15. You decide which levels light up, and how brightly, to suit your grid.</p>
+        <ul>
+          <li><strong>16 levels</strong>: for varibright grids; levels are sent as they are.</li>
+          <li><strong>4 steps</strong>: set the level from which steps 1–3 (dim, mid, bright) light. The value sent for each step (5 / 10 / 15 by default) can be changed too.</li>
+          <li><strong>On / off only</strong>: for early mono grids. Set one level from which LEDs turn on.</li>
+        </ul>
+        <div class="levels" aria-label="Default 4-step mapping">
+          <span><i>0</i></span><span><i>1</i></span><span><i>2</i></span><span><i>3</i></span>
+          <span style="--a:.4"><i>4</i></span><span style="--a:.4"><i>5</i></span><span style="--a:.4"><i>6</i></span><span style="--a:.4"><i>7</i></span>
+          <span style="--a:.7"><i>8</i></span><span style="--a:.7"><i>9</i></span><span style="--a:.7"><i>10</i></span><span style="--a:.7"><i>11</i></span>
+          <span style="--a:1"><i>12</i></span><span style="--a:1"><i>13</i></span><span style="--a:1"><i>14</i></span><span style="--a:1"><i>15</i></span>
+        </div>
+        <p class="cap">Default 4-step mapping: 0–3 off, 4–7 dim, 8–11 mid, 12–15 bright.</p>
+        <p>The “Mapping” row in the settings shows what each level does with the current settings. Holding “Hold for test pattern” shows levels 0–15 from the leftmost column of the grid, so you can see which column starts to light and adjust. “Show the same steps on the on-screen grid” makes the on-screen grid match the hardware.</p>
+        <div class="note"><strong>Grid not in the list?</strong>　Early grids use an FTDI chip and may need the FTDI driver on your computer. macOS includes it.</div>
+      </section>
+
+      <section id="audio">
+        <h2><span class="n">09</span>Sound and softcut</h2>
+        <h3>Engines</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Engine</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>PolyPerc</td><td>Supported (hz amp cutoff release pw gain pan)</td></tr>
+            <tr><td>TestSine</td><td>Supported</td></tr>
+            <tr><td>PolySub / MollyThePoly</td><td>Simplified; the sound is an approximation.</td></tr>
+            <tr><td>Others</td><td>SuperCollider engines are not implemented. Commands that set a pitch play a stand-in percussive sound.</td></tr>
+          </tbody>
+        </table></div>
+        <h3>softcut</h3>
+        <p>6 voices and 2 buffers (about 87 seconds each), with rate, loops, crossfades, recording and overdub, filters, voice-to-voice routing, position polling, waveform rendering and reading and writing audio files.</p>
+        <h3>AUDIO IN</h3>
+        <p>“AUDIO IN” below the device chooses what softcut records. “Test tone” is a simple arpeggio; audio files you put in <code>dust/audio</code> can also loop as the input. Microphone input is not supported.</p>
+        <p>Reverb and compressor (on / off and amount) and the amp_in / amp_out polls are also available.</p>
+      </section>
+
+      <section id="compat">
+        <h2><span class="n">10</span>Compatibility</h2>
+        <p>About three quarters of the catalog starts without errors. The usual reasons a script doesn't:</p>
+        <ul>
+          <li>It relies on parameters that a SuperCollider engine adds</li>
+          <li>It requires MIDI devices</li>
+          <li>It uses the network or OS commands</li>
+          <li>It expects audio or preset files to be in dust already</li>
+        </ul>
+        <h3>Available libraries</h3>
+        <p><code>util</code> <code>tabutil</code> <code>controlspec</code> <code>musicutil</code> <code>sequins</code> <code>lattice</code> <code>lfo</code> <code>reflection</code> <code>pattern_time</code> <code>er</code> <code>formatters</code> <code>ui</code> <code>graph</code> <code>filtergraph</code> <code>envgraph</code> <code>voice</code> <code>fileselect</code> <code>textentry</code> <code>listselect</code> <code>cjson</code> and more. <code>include</code> and <code>require</code> load files from dust/code and these libraries.</p>
+        <h3>Not supported</h3>
+        <p>MIDI, crow.ii, tape, microphone input, OSC and mods. Calling them doesn't raise errors; the calls are ignored.</p>
+      </section>
+
+      <section id="data">
+        <h2><span class="n">11</span>Where data is kept</h2>
+        <p>Installed scripts, your edits, audio files, psets and so on are all stored in your browser (IndexedDB). Nothing is sent to a server.</p>
+        <ul>
+          <li>Another browser or device starts from scratch.</li>
+          <li>If you send the URL to a friend, they won't see your data.</li>
+          <li>To reset everything, delete this site's data in your browser settings.</li>
+        </ul>
+      </section>
+
+      <section id="trouble">
+        <h2><span class="n">12</span>Troubleshooting</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Problem</th><th>What to check</th></tr></thead>
+          <tbody>
+            <tr><td>No sound</td><td>Is the top-right button “SOUND ON” (green)? If it says “SOUND OFF”, click it. On iPhone / iPad the silent switch can mute it. Also check your computer's output device and the MIX page levels. Scripts that use engines other than PolyPerc may play a stand-in sound or nothing.</td></tr>
+            <tr><td>The indicator turned red</td><td>Read the error in MATRON. <code>include: … not found</code> means a file or another project is missing.</td></tr>
+            <tr><td>Install fails</td><td>Either the rate limit (about 60 per hour) or a network problem. Try again after the time shown.</td></tr>
+            <tr><td>Things stopped moving</td><td>Restart with ■ Stop → ▶ Run. Infinite loops are stopped automatically and MATRON shows “timeout”.</td></tr>
+            <tr><td>The hardware grid won't connect</td><td>Are you in Chrome / Edge? Did you quit serialosc? For older grids, try choosing the protocol and size by hand.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <footer>
+        <p>norns is a monome product. This emulator is unofficial, and its code is under the <a href="https://github.com/k5sano/norns-web/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>. Installed scripts belong to their authors. <a href="https://github.com/k5sano/norns-web" target="_blank" rel="noopener">Source code (GitHub)</a></p>
+      </footer>
+    </main>
+  </div>
+</div>
+</body>
+</html>

@@ -31,11 +31,12 @@ function report(msg) {
   if (msg === lastErr && t - lastErrT < 2000) return;
   lastErr = msg; lastErrT = t;
   log('### ' + msg, 'e');
-  setStatus('err', 'エラー — ' + scriptLabel());
+  setStatus('err', 'status.err');
 }
 const warnedSet = new Set();
-function warnOnce(key, msg) { if (!warnedSet.has(key)) { warnedSet.add(key); log('# ' + (msg || key + ' は未実装のため無視されます'), 's'); } }
-function setStatus(kind, text) { statusEl.className = 'status ' + (kind || ''); statusText.textContent = text; }
+function warnOnce(key, msg) { if (!warnedSet.has(key)) { warnedSet.add(key); log('# ' + (msg || T('log.ignored', { k: key })), 's'); } }
+let statusState = ['', 'status.boot'];
+function setStatus(kind, key) { statusState = [kind, key]; statusEl.className = 'status ' + (kind || ''); statusText.textContent = T(key, { s: scriptLabel() }); }
 
 /* ============ virtual filesystem (dust) ============ */
 const VFS = new Map();
@@ -204,7 +205,7 @@ function getImage(path) {
   e = { ready: false, canvas: null };
   images.set(path, e);
   const bytes = vfs.read(path);
-  if (!bytes || typeof createImageBitmap !== 'function') { warnOnce('png:' + path, '画像が見つかりません: ' + path); return null; }
+  if (!bytes || typeof createImageBitmap !== 'function') { warnOnce('png:' + path, T('log.png.missing', { p: path })); return null; }
   createImageBitmap(new Blob([bytes])).then(bm => {
     const c = document.createElement('canvas'); c.width = bm.width; c.height = bm.height;
     const x = c.getContext('2d'); x.drawImage(bm, 0, 0);
@@ -215,7 +216,7 @@ function getImage(path) {
     }
     x.putImageData(d, 0, 0);
     e.canvas = c; e.ready = true;
-  }).catch(() => warnOnce('png:' + path, '画像を読み込めません: ' + path));
+  }).catch(() => warnOnce('png:' + path, T('log.png.bad', { p: path })));
   return null;
 }
 const multi = (...a) => { a.multi = true; return a; };
@@ -300,7 +301,7 @@ function makeIR(sec) {
 function initAudio() {
   if (AC) return;
   const C = window.AudioContext || window.webkitAudioContext;
-  if (!C) { warnOnce('noaudio', 'このブラウザでは Web Audio が使えません'); return; }
+  if (!C) { warnOnce('noaudio', T('log.noaudio')); return; }
   try { AC = new C({ latencyHint: 'interactive' }); } catch (e) { AC = new C(); }
   A.mix = gain(1);
   A.dac = gain(1);
@@ -364,7 +365,7 @@ function resumeAudio() {
   if (!AC) return;
   if (AC.state !== 'running') {
     unlockAudio();
-    AC.resume().then(updateAudioHint).catch(e => warnOnce('audio-resume', '音声を開始できませんでした: ' + (e && e.message || e)));
+    AC.resume().then(updateAudioHint).catch(e => warnOnce('audio-resume', T('log.resume.fail', { e: e && e.message || e })));
   }
   updateAudioHint();
 }
@@ -372,9 +373,9 @@ function updateAudioHint() {
   const on = !!(AC && AC.state === 'running');
   $('audioHint').hidden = on || audioMuted;
   const b = $('soundBtn');
-  if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = on ? '音 ON' : '音 OFF'; b.title = on ? 'クリックで音を止める' : 'クリックで音を出す'; }
+  if (b) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.textContent = T(on ? 'sound.on' : 'sound.off'); b.title = T(on ? 'sound.on.title' : 'sound.off.title'); }
   const st = AC ? AC.state : 'none';
-  if (st === 'running' && !audioLogged) { audioLogged = st; log('# 音声: 出力中（' + AC.sampleRate + ' Hz）', 's'); }
+  if (st === 'running' && !audioLogged) { audioLogged = st; log('# ' + T('log.audio.on', { r: AC.sampleRate }), 's'); }
 }
 
 /* ---- softcut facade ---- */
@@ -391,7 +392,7 @@ async function initSoftcut() {
     };
     A.scIn.connect(SC.node); SC.node.connect(A.cutOut);
   } catch (e) {
-    if (typeof SoftcutCore !== 'function') { warnOnce('softcut', 'softcut を初期化できませんでした'); return; }
+    if (typeof SoftcutCore !== 'function') { warnOnce('softcut', T('log.softcut.init')); return; }
     SC.core = new SoftcutCore(AC.sampleRate);
     const sp = AC.createScriptProcessor(1024, 2, 2);
     sp.onaudioprocess = ev => {
@@ -466,14 +467,14 @@ function decodeFile(path) {
 }
 function scLoadFile(path, startSrc, startDst, dur, chSrc, chDst, preserve, mix) {
   path = String(path);
-  if (!vfs.read(path)) { report('softcut: ファイルがありません ' + path + '（ライブラリから音声を読み込めます）'); return; }
+  if (!vfs.read(path)) { report(T('log.softcut.nofile', { p: path })); return; }
   decodeFile(path).then(ab => {
     const sr = ab.sampleRate;
     const src = ab.getChannelData(Math.min(ab.numberOfChannels - 1, Math.max(0, chSrc - 1)));
     const a = Math.max(0, Math.floor(startSrc * sr));
     const b = dur < 0 ? src.length : Math.min(src.length, a + Math.floor(dur * sr));
     scCall('load', [chDst - 1, startDst, src.slice(a, b), preserve, mix]);
-  }).catch(() => report('softcut: 音声をデコードできません ' + path));
+  }).catch(() => report(T('log.softcut.decode', { p: path })));
 }
 function encodeWav(chans, sr) {
   const n = chans[0].length, nc = chans.length, b = new ArrayBuffer(44 + n * nc * 2), v = new DataView(b);
@@ -491,7 +492,7 @@ function scWriteFile(path, start, dur, chs) {
     got[i] = r;
     if (got.filter(Boolean).length === chs.length) {
       vfs.write(String(path), encodeWav(got, AC ? AC.sampleRate : 48000));
-      log('# softcut: ' + String(path).replace('/home/we/', '') + ' に書き出しました', 's');
+      log('# ' + T('log.softcut.wrote', { p: String(path).replace('/home/we/', '') }), 's');
     }
   }));
 }
@@ -696,12 +697,12 @@ function engineNative(cmd, ...args) {
     const f = guessFreq(cmd, args);
     if (f) { perc(f, { ...eng, release: 0.6, cutoff: 2000 }); return; }
   }
-  warnOnce('engine:' + engineName + '.' + cmd, `engine.${cmd} は ${engineName} の簡易版では無視されます`);
+  warnOnce('engine:' + engineName + '.' + cmd, T('log.engine.cmd', { c: cmd, e: engineName }));
 }
 function engineNameNative(n) {
   resetEngine();
-  if (n in ENGINE_INFO) { engineName = n; if (n !== 'PolyPerc' && n !== 'None') log(`# engine ${n}: 簡易シンセで近似しています`, 's'); }
-  else { engineName = n; log(`# engine ${n} は SuperCollider 製で未実装です。音名らしいコマンドは代替のパーカッシブ音で鳴らします`, 's'); }
+  if (n in ENGINE_INFO) { engineName = n; if (n !== 'PolyPerc' && n !== 'None') log('# ' + T('log.engine.approx', { e: n }), 's'); }
+  else { engineName = n; log('# ' + T('log.engine.missing', { e: n }), 's'); }
 }
 
 /* ============ grid ============ */
@@ -937,7 +938,7 @@ function setInputSource(v) {
     decodeFile(v).then(ab => {
       const s = AC.createBufferSource(); s.buffer = ab; s.loop = true; s.connect(A.adc); s.start();
       inputNode = s;
-    }).catch(() => report('音声をデコードできません: ' + v));
+    }).catch(() => report(T('log.decode', { p: v })));
   }
 }
 $('inputSrc').addEventListener('change', e => { resumeAudio(); setInputSource(e.target.value); });
@@ -945,7 +946,7 @@ function refreshInputSelect() {
   const sel = $('inputSrc'), cur = sel.value;
   sel.innerHTML = '';
   const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
-  add('', 'なし（無音）'); add('tone', 'テストトーン（アルペジオ）');
+  add('', T('audioin.none')); add('tone', T('audioin.tone'));
   for (const p of [...VFS.keys()].filter(k => AUDIO_EXT.test(k)).sort()) add(p, p.replace(DUST, ''));
   sel.value = [...sel.options].some(o => o.value === cur) ? cur : '';
 }
@@ -1019,13 +1020,13 @@ function stop(quiet) {
   surf.forEach(resetSurface); shown = 0; tgt = 0; present(0);
   resetDevices();
   $('menuBtn').setAttribute('aria-pressed', 'false');
-  if (!quiet) { setStatus('', '停止'); log('# script stopped', 's'); }
+  if (!quiet) { setStatus('', 'status.stop'); log('# script stopped', 's'); }
 }
 
 function run(path) {
-  if (!F) { report('Lua ランタイム (fengari) を読み込めませんでした。ネットワークを確認して再読み込みしてください。'); return; }
-  if (!BOOT) { report('ランタイムの読み込みが終わっていません'); return; }
-  if (!vfs.read(path)) { report('スクリプトがありません: ' + path); return; }
+  if (!F) { report(T('log.nofengari')); return; }
+  if (!BOOT) { report(T('log.boot.pending')); return; }
+  if (!vfs.read(path)) { report(T('log.noscript', { p: path })); return; }
   stop(true);
   mixState = { ...MIX_DEFAULT, ...userMix }; applyMix();
   scCall('clear', []);
@@ -1035,7 +1036,7 @@ function run(path) {
   lualib.luaL_openlibs(L);
   try {
     lua.lua_sethook(L, Ls => {
-      if (performance.now() > deadline) { deadline = Infinity; lauxlib.luaL_error(Ls, to_luastring('timeout: 処理が長時間止まらないため中断しました（無限ループ？）')); }
+      if (performance.now() > deadline) { deadline = Infinity; lauxlib.luaL_error(Ls, to_luastring(T('log.timeout'))); }
     }, lua.LUA_MASKCOUNT, 20000);
   } catch (e) {}
   const natives = {
@@ -1050,6 +1051,7 @@ function run(path) {
     __file_info: p => { const i = fileInfo(String(p)); return i ? multi(i.ch, i.frames, i.sr) : multi(0, 0, 0); },
     __poll_value: name => pollValue(String(name)),
     __crow_out: crowOutNative, __used: usedNative,
+    __lang: () => window.I18N.lang,
     __menu_state: open => { $('menuBtn').setAttribute('aria-pressed', open ? 'true' : 'false'); },
   };
   def('__fs_read', p => { const b = vfs.read(String(p)); return b ? { bytes: b } : null; });
@@ -1060,7 +1062,7 @@ function run(path) {
   for (const [k, f] of Object.entries(arcFns)) def(k, f);
   if (!loadChunk(BOOT, 'norns')) { L = null; return; }
   log('# script load: ' + scriptLabel(), 's');
-  setStatus('run', '実行中 — ' + scriptLabel());
+  setStatus('run', 'status.run');
   t0 = performance.now();
   callLua('__start', path);
   timer = setInterval(() => { if (L) callLua('__tick', (performance.now() - t0) / 1000); if (crowDirty) drawCrow(); }, 5);
@@ -1139,9 +1141,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && AC
 $('soundBtn').addEventListener('click', e => {
   e.stopPropagation();
   initAudio();
-  if (!AC) { report('このブラウザでは音声を出せません'); return; }
+  if (!AC) { report(T('log.cantaudio')); return; }
   if (AC.state === 'running') { audioMuted = true; AC.suspend().then(updateAudioHint); }
-  else { audioMuted = false; unlockAudio(); AC.resume().then(updateAudioHint).catch(err => report('音声を開始できませんでした: ' + (err && err.message || err))); }
+  else { audioMuted = false; unlockAudio(); AC.resume().then(updateAudioHint).catch(err => report(T('log.resume.fail', { e: err && err.message || err }))); }
 }, true);
 
 /* ============ editor ============ */
@@ -1184,7 +1186,7 @@ $('stop').addEventListener('click', () => stop());
 $('revert').addEventListener('click', () => {
   const o = originals.get(currentFile); if (o == null) return;
   vfs.write(currentFile, o); openFile(currentFile);
-  log('# ' + currentFile.replace(CODE, '') + ' を元に戻しました', 's');
+  log('# ' + T('log.reverted', { p: currentFile.replace(CODE, '') }), 's');
 });
 $('newScript').addEventListener('click', () => {
   let i = 1; while (vfs.exists(CODE + 'untitled' + i)) i++;
@@ -1197,7 +1199,7 @@ $('repl').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const v = e.target.value.trim(); if (!v) return;
   log('>> ' + v, 'r'); e.target.value = '';
-  if (!L) { log('# スクリプトが動いていません。先に実行してください', 's'); return; }
+  if (!L) { log('# ' + T('log.notrunning'), 's'); return; }
   callLua('__repl', v);
 });
 $('menuBtn').addEventListener('click', () => { resumeAudio(); callLua('__menu_toggle'); });
@@ -1233,10 +1235,10 @@ async function ghTree(owner, repo, ref) {
   const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`, { headers: { Accept: 'application/vnd.github+json' } });
   if (r.status === 403 || r.status === 429) {
     const reset = +r.headers.get('x-ratelimit-reset');
-    const e = new Error('GitHub API の回数制限（1時間60回）に達しました' + (reset ? `。${new Date(reset * 1000).toLocaleTimeString()} 以降にもう一度押してください` : ''));
+    const e = new Error(T('gh.rate') + (reset ? T('gh.rate.retry', { t: new Date(reset * 1000).toLocaleTimeString() }) : ''));
     e.code = 'rate'; throw e;
   }
-  if (!r.ok) throw new Error(`${owner}/${repo} の一覧を取得できません (${r.status})`);
+  if (!r.ok) throw new Error(T('gh.list', { r: owner + '/' + repo, s: r.status }));
   const j = await r.json();
   return { sha: j.sha, tree: j.tree || [], truncated: j.truncated };
 }
@@ -1264,7 +1266,7 @@ async function pool(items, n, fn) {
 // downloads repo (and its git submodules) into dust/code/<dest>/<prefix>
 async function fetchRepo(owner, repo, ref, dest, prefix, progress, depth, stats) {
   const { sha, tree, truncated } = await ghTree(owner, repo, ref);
-  if (truncated) log(`# ${owner}/${repo} はファイル数が多いため一部だけ取得します`, 's');
+  if (truncated) log('# ' + T('gh.truncated', { r: owner + '/' + repo }), 's');
   const blobs = tree.filter(t => t.type === 'blob').map(t => ({ ...t, kind: keepFile(t.path, t.size || 0) })).filter(t => t.kind);
   const audio = blobs.filter(t => t.kind === 'audio');
   let audioTotal = 0;
@@ -1278,7 +1280,7 @@ async function fetchRepo(owner, repo, ref, dest, prefix, progress, depth, stats)
     const bytes = await rawFetch(owner, repo, sha, t.path);
     vfs.write(CODE + dest + '/' + prefix + t.path, bytes, true);
     stats.done++;
-    progress(`取得中 ${stats.done}/${stats.total}`);
+    progress(T('gh.progress', { d: stats.done, t: stats.total }));
   });
   const subs = tree.filter(t => t.type === 'commit');
   if (!subs.length) return;
@@ -1290,7 +1292,7 @@ async function fetchRepo(owner, repo, ref, dest, prefix, progress, depth, stats)
     const gr = d && ghRepo(d.url.replace(/^\.\.\//, `https://github.com/${owner}/`));
     if (!gr || depth >= 2) { stats.missingSubs.push(sm.path); continue; }
     try {
-      progress(`サブモジュール ${sm.path}`);
+      progress(T('gh.sub', { p: sm.path }));
       await fetchRepo(gr.owner, gr.repo, sm.sha, dest, prefix + sm.path + '/', progress, depth + 1, stats);
     } catch (e) {
       if (e.code === 'rate') throw e;
@@ -1300,30 +1302,30 @@ async function fetchRepo(owner, repo, ref, dest, prefix, progress, depth, stats)
 }
 async function fetchFromGitHub(c, progress) {
   const gr = ghRepo(c.u);
-  if (!gr) { report(c.n + ': GitHub 以外のリポジトリは自動取得できません。ZIP を上の枠に入れてください'); return false; }
+  if (!gr) { report(T('gh.notgh', { n: c.n })); return false; }
   const stats = { total: 0, done: 0, skippedAudio: 0, missingSubs: [] };
-  progress('一覧を取得中…');
+  progress(T('gh.listing'));
   await fetchRepo(gr.owner, gr.repo, 'HEAD', c.n, '', progress, 0, stats);
-  log(`# ${c.n} を GitHub から取得しました (${stats.done} files)`, 's');
-  if (stats.missingSubs.length) log(`# 取得できなかった git submodule: ${stats.missingSubs.join(', ')}`, 's');
-  if (stats.skippedAudio) log(`# 大きいため音声ファイル ${stats.skippedAudio} 個は取得していません`, 's');
+  log('# ' + T('gh.done', { n: c.n, d: stats.done }), 's');
+  if (stats.missingSubs.length) log('# ' + T('gh.missingsubs', { s: stats.missingSubs.join(', ') }), 's');
+  if (stats.skippedAudio) log('# ' + T('gh.skipaudio', { n: stats.skippedAudio }), 's');
   for (const k of VFS.keys()) if (k.startsWith(CODE + c.n + '/') && AUDIO_EXT.test(k)) fileInfo(k);
   return true;
 }
 async function installProject(name, progress, depth = 0) {
   if (vfs.exists(CODE + name)) return true;
   const c = CATALOG.find(x => x.n === name);
-  if (!c) { report('カタログに ' + name + ' がありません'); return false; }
+  if (!c) { report(T('gh.notincat', { n: name })); return false; }
   try {
     if (!(await fetchFromGitHub(c, progress))) return false;
   } catch (e) {
     vfs.remove(CODE + name);
-    report(name + ' の取得に失敗しました: ' + (e && e.message || e) + (e && e.code === 'rate' ? '' : '（ネットワーク接続を確認してください）'));
+    report(T('gh.fail', { n: name, e: e && e.message || e }) + (e && e.code === 'rate' ? '' : T('gh.fail.net')));
     return false;
   }
   for (const r of new Set(c.r || [])) {
     if (depth < 2 && !vfs.exists(CODE + r) && CATALOG.some(x => x.n === r)) {
-      log(`# 必要なプロジェクト ${r} も入れます`, 's');
+      log('# ' + T('gh.dep', { r }), 's');
       await installProject(r, progress, depth + 1);
     }
   }
@@ -1351,7 +1353,7 @@ function renderCatalog() {
   });
   const rank = c => c.s === 'ok' ? 0 : 1;
   rows.sort((a, b) => (rank(a) - rank(b)) || a.n.localeCompare(b.n));
-  $('catCount').textContent = `${rows.length} / ${CATALOG.length} 件`;
+  $('catCount').textContent = T('lib.count', { n: rows.length, t: CATALOG.length });
   box.innerHTML = '';
   const frag = document.createDocumentFragment();
   for (const c of rows.slice(0, 200)) {
@@ -1364,19 +1366,19 @@ function renderCatalog() {
     if (c.d) main.appendChild(el('p', 'cat-desc', c.d));
     const tags = el('div', 'chips');
     const engs = c.e.length ? c.e : [];
-    for (const e of engs) tags.appendChild(el('span', 'chip ' + (SUPPORTED_ENGINES.has(e) ? 'ok' : 'warn'), e === 'None' ? 'エンジンなし' : e + (SUPPORTED_ENGINES.has(e) ? '' : ' (代替音)')));
+    for (const e of engs) tags.appendChild(el('span', 'chip ' + (SUPPORTED_ENGINES.has(e) ? 'ok' : 'warn'), e === 'None' ? T('lib.noengine') : e === '(custom)' ? T('lib.customengine') : e + (SUPPORTED_ENGINES.has(e) ? '' : T('lib.standin'))));
     if (c.f.includes('s')) tags.appendChild(el('span', 'chip', 'softcut'));
     if (c.f.includes('g')) tags.appendChild(el('span', 'chip', 'grid'));
     if (c.f.includes('a')) tags.appendChild(el('span', 'chip', 'arc'));
     if (c.f.includes('c')) tags.appendChild(el('span', 'chip', 'crow'));
-    if (c.f.includes('m')) tags.appendChild(el('span', 'chip warn', 'midi (未対応)'));
-    for (const r of (c.r || [])) tags.appendChild(el('span', 'chip warn', '要: ' + r));
+    if (c.f.includes('m')) tags.appendChild(el('span', 'chip warn', T('lib.midi')));
+    for (const r of (c.r || [])) tags.appendChild(el('span', 'chip warn', T('lib.needs', { r })));
     main.appendChild(tags);
     li.appendChild(main);
-    if (c.s === 'ok') tags.appendChild(el('span', 'chip ok', '起動確認済'));
+    if (c.s === 'ok') tags.appendChild(el('span', 'chip ok', T('lib.verified')));
     const act = el('div', 'cat-act');
     const installed = vfs.exists(CODE + c.n);
-    const label = installed ? '実行' : 'インストール';
+    const label = T(installed ? 'lib.run' : 'lib.install');
     const btn = el('button', installed ? '' : 'primary', label);
     const prog = el('span', 'cat-author');
     btn.addEventListener('click', async () => {
@@ -1388,7 +1390,7 @@ function renderCatalog() {
         if (!ok) { btn.textContent = label; return; }
       }
       const main = mainScriptOf(c.n);
-      if (main) { openFile(main); run(main); } else report(c.n + ' に起動できる .lua が見つかりません');
+      if (main) { openFile(main); run(main); } else report(T('lib.nomain', { n: c.n }));
       renderCatalog(); renderInstalled();
     });
     act.appendChild(btn);
@@ -1398,7 +1400,7 @@ function renderCatalog() {
     frag.appendChild(li);
   }
   box.appendChild(frag);
-  if (rows.length > 200) box.appendChild(el('li', 'cat-more', `ほか ${rows.length - 200} 件。検索で絞り込めます。`));
+  if (rows.length > 200) box.appendChild(el('li', 'cat-more', T('lib.more', { n: rows.length - 200 })));
 }
 function mainScriptOf(proj) {
   const d = CODE + proj + '/';
@@ -1411,36 +1413,36 @@ function renderInstalled() {
   const box = $('installed'); if (!box || $('libraryView').hidden) return;
   box.innerHTML = '';
   const projs = vfs.projects();
-  if (!projs.length) box.appendChild(el('li', 'cat-more', 'まだありません'));
+  if (!projs.length) box.appendChild(el('li', 'cat-more', T('lib.empty')));
   for (const p of projs) {
     const li = el('li', 'inst');
     const files = [...VFS.keys()].filter(k => k.startsWith(CODE + p + '/')).length;
     li.appendChild(el('span', 'cat-name', p));
-    li.appendChild(el('span', 'cat-author', files + ' files'));
+    li.appendChild(el('span', 'cat-author', T(files === 1 ? 'lib.file1' : 'lib.files', { n: files })));
     const sp = el('span', 'spacer'); li.appendChild(sp);
-    const upd = el('button', '', '更新');
-    upd.title = 'GitHub から最新版を取り直します（編集した内容は消えます）';
+    const upd = el('button', '', T('lib.update'));
+    upd.title = T('lib.update.title');
     upd.addEventListener('click', async () => {
-      if (!CATALOG.some(x => x.n === p)) { report(p + ' はカタログにないため更新できません'); return; }
+      if (!CATALOG.some(x => x.n === p)) { report(T('lib.noupdate', { n: p })); return; }
       upd.disabled = true; upd.textContent = '…';
       if (currentPath.startsWith(CODE + p + '/')) stop(true);
       const backup = [...VFS.entries()].filter(([k]) => k.startsWith(CODE + p + '/'));
       vfs.remove(CODE + p);
       const ok = await installProject(p, t => { upd.textContent = t; });
       if (!ok) { for (const [k, v] of backup) vfs.write(k, v, true); vfsChanged(); }
-      upd.disabled = false; upd.textContent = '更新';
+      upd.disabled = false; upd.textContent = T('lib.update');
     });
     li.appendChild(upd);
-    const runB = el('button', '', '実行');
-    runB.addEventListener('click', () => { resumeAudio(); const m = mainScriptOf(p); if (m) { openFile(m); run(m); } else report(p + ' に .lua がありません'); });
-    const del = el('button', 'danger', '削除');
+    const runB = el('button', '', T('lib.run'));
+    runB.addEventListener('click', () => { resumeAudio(); const m = mainScriptOf(p); if (m) { openFile(m); run(m); } else report(T('lib.nolua', { n: p })); });
+    const del = el('button', 'danger', T('lib.delete'));
     let armed = false;
     del.addEventListener('click', () => {
-      if (!armed) { armed = true; del.textContent = '本当に削除'; setTimeout(() => { armed = false; del.textContent = '削除'; }, 3000); return; }
+      if (!armed) { armed = true; del.textContent = T('lib.delete.confirm'); setTimeout(() => { armed = false; del.textContent = T('lib.delete'); }, 3000); return; }
       if (currentPath.startsWith(CODE + p + '/')) stop(true);
       vfs.remove(CODE + p);
       for (const k of [...originals.keys()]) if (k.startsWith(CODE + p + '/')) originals.delete(k);
-      log(`# ${p} を削除しました`, 's');
+      log('# ' + T('lib.deleted', { n: p }), 's');
       if (currentFile.startsWith(CODE + p + '/')) { const s = vfs.scripts()[0]; if (s) openFile(CODE + s + '.lua'); }
     });
     li.appendChild(runB); li.appendChild(del);
@@ -1451,14 +1453,14 @@ function renderAudioList() {
   const box = $('audioFiles'); if (!box || $('libraryView').hidden) return;
   box.innerHTML = '';
   const files = [...VFS.keys()].filter(k => AUDIO_EXT.test(k) || /\.png$/i.test(k)).filter(k => !k.startsWith(CODE)).sort();
-  if (!files.length) box.appendChild(el('li', 'cat-more', 'dust/audio はまだ空です'));
+  if (!files.length) box.appendChild(el('li', 'cat-more', T('lib.audio.empty')));
   for (const f of files) {
     const li = el('li', 'inst');
     li.appendChild(el('span', 'cat-name', f.replace(DUST, '')));
     const info = fileInfo(f);
     li.appendChild(el('span', 'cat-author', info ? `${info.ch}ch · ${(info.frames / info.sr).toFixed(1)}s` : ''));
     li.appendChild(el('span', 'spacer'));
-    const del = el('button', 'danger', '削除');
+    const del = el('button', 'danger', T('lib.delete'));
     del.addEventListener('click', () => vfs.remove(f));
     li.appendChild(del);
     box.appendChild(li);
@@ -1478,27 +1480,27 @@ async function importFiles(list) {
         const base = name.replace(/\.lua$/i, '').replace(/[^\w.-]+/g, '_');
         const p = `${CODE}${base}/${base}.lua`;
         vfs.write(p, new Uint8Array(await file.arrayBuffer()));
-        log(`# ${name} を dust/code/${base}/ に入れました`, 's');
+        log('# ' + T('imp.lua', { n: name, b: base }), 's');
         openFile(p);
       } else if (AUDIO_EXT.test(name)) {
         const p = DUST + 'audio/' + name.replace(/[^\w.\- ]+/g, '_');
         vfs.write(p, new Uint8Array(await file.arrayBuffer()));
         fileInfo(p);
-        log(`# ${name} を dust/audio/ に入れました`, 's');
+        log('# ' + T('imp.audio', { n: name }), 's');
       } else if (/\.png$/i.test(name)) {
         const p = DUST + 'data/images/' + name;
         vfs.write(p, new Uint8Array(await file.arrayBuffer()));
-        log(`# ${name} を dust/data/images/ に入れました`, 's');
-      } else log('# 未対応のファイル形式です: ' + name, 's');
-    } catch (e) { report('読み込みに失敗しました: ' + name + ' (' + (e.message || e) + ')'); }
+        log('# ' + T('imp.png', { n: name }), 's');
+      } else log('# ' + T('imp.unsupported', { n: name }), 's');
+    } catch (e) { report(T('imp.fail', { n: name, e: e.message || e })); }
   }
   vfsChanged();
 }
 async function importZip(file) {
-  if (!window.JSZip) { report('ZIP を開くライブラリを読み込めませんでした'); return; }
+  if (!window.JSZip) { report(T('imp.nozip')); return; }
   const zip = await JSZip.loadAsync(file);
   const entries = Object.values(zip.files).filter(f => !f.dir && !/(^|\/)(\.git|__MACOSX)\//.test(f.name) && !/\.DS_Store$/.test(f.name));
-  if (!entries.length) { report('ZIP が空です'); return; }
+  if (!entries.length) { report(T('imp.empty')); return; }
   const roots = new Set(entries.map(e => e.name.split('/')[0]));
   let strip = '', repo = file.name.replace(/\.zip$/i, '');
   if (roots.size === 1 && entries.every(e => e.name.includes('/'))) { strip = [...roots][0] + '/'; repo = [...roots][0]; }
@@ -1512,14 +1514,14 @@ async function importZip(file) {
     if (!rel) continue;
     const data = await e.async('uint8array');
     total += data.length;
-    if (data.length > 40e6) { log('# 大きすぎるため除外: ' + rel, 's'); continue; }
+    if (data.length > 40e6) { log('# ' + T('imp.toobig', { p: rel }), 's'); continue; }
     vfs.write(CODE + proj + '/' + rel, data, true);
     count++;
   }
   vfsChanged();
   log(`# ${file.name} → dust/code/${proj}/ (${count} files, ${(total / 1e6).toFixed(1)} MB)`, 's');
   const main = mainScriptOf(proj);
-  if (main) { openFile(main); log('# ' + main.replace(CODE, '') + ' を開きました。▶ 実行 で動きます', 's'); }
+  if (main) { openFile(main); log('# ' + T('imp.opened', { p: main.replace(CODE, '') }), 's'); }
 }
 const drop = $('drop'), picker = $('picker');
 drop.addEventListener('click', () => picker.click());
@@ -1530,6 +1532,31 @@ picker.addEventListener('change', () => { importFiles([...picker.files]); picker
 drop.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) importFiles([...e.dataTransfer.files]); });
 window.addEventListener('dragover', e => e.preventDefault());
 window.addEventListener('drop', e => { e.preventDefault(); if (e.target.closest && e.target.closest('#drop')) return; if (e.dataTransfer && e.dataTransfer.files.length) { showView('library'); importFiles([...e.dataTransfer.files]); } });
+
+/* ============ language ============ */
+function exampleCode(e) { return (window.I18N.lang === 'en' && e.code_en) ? e.code_en : e.code; }
+function swapExamples() {
+  // unedited sample scripts follow the UI language
+  for (const e of (window.NORNS_EXAMPLES || [])) {
+    const p = `${CODE}${e.name}/${e.name}.lua`;
+    const want = exampleCode(e), cur = vfs.text(p);
+    if (cur !== null && (cur === e.code || cur === e.code_en) && cur !== want) {
+      vfs.write(p, want, true);
+      if (p === currentFile) { srcEl.value = want; saveDirty = false; }
+    }
+    originals.set(p, want);
+  }
+}
+$('langBtn').addEventListener('click', () => window.I18N.setLang(window.I18N.lang === 'ja' ? 'en' : 'ja'));
+window.I18N.onChange(() => {
+  swapExamples();
+  setStatus(statusState[0], statusState[1]);
+  updateAudioHint();
+  refreshInputSelect();
+  renderCatalog();
+  if (!$('libraryView').hidden) { renderInstalled(); renderAudioList(); }
+});
+window.I18N.apply();
 
 /* ============ hooks for hardware controllers (hwgrid.js) ============ */
 window.NornsEmu = {
@@ -1551,12 +1578,13 @@ async function boot() {
     const [boot, ...libs] = await Promise.all([fetchBytes(BASE + 'lua/boot.lua'), ...LUA_LIBS.map(n => fetchBytes(BASE + 'lua/lib/' + n + '.lua'))]);
     BOOT = boot;
     LUA_LIBS.forEach((n, i) => VFS.set('/home/we/norns/lua/lib/' + n + '.lua', libs[i]));
-  } catch (e) { report('ランタイムを読み込めませんでした: ' + e.message); }
+  } catch (e) { report(T('log.runtime.fail', { e: e.message })); }
   const ex = window.NORNS_EXAMPLES || [];
   for (const e of ex) {
     const p = `${CODE}${e.name}/${e.name}.lua`;
-    originals.set(p, e.code);
-    if (!VFS.has(p) && !(e.name === 'blank' && VFS.size > 40)) vfs.write(p, e.code, true);
+    const code = exampleCode(e);
+    originals.set(p, code);
+    if (!VFS.has(p) && !(e.name === 'blank' && VFS.size > 40)) vfs.write(p, code, true);
   }
   fetch(BASE + 'catalog.json').then(r => r.json()).then(j => { CATALOG = j; renderCatalog(); }).catch(() => {});
   initAudio();

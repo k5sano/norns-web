@@ -36,7 +36,7 @@ function previewLevel(l) {
 async function write(bytes) {
   if (!S.writer) return;
   try { await S.writer.write(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)); }
-  catch (e) { disconnect('送信エラー: ' + (e.message || e)); }
+  catch (e) { disconnect(T('hw.err.send', { e: e.message || e })); }
 }
 function rot(x, y) {
   if (cfg.rot === 180) return [S.cols - 1 - x, S.rows - 1 - y];
@@ -150,7 +150,7 @@ async function readLoop() {
         if (done) break;
         if (value) { for (const b of value) rx.push(b); parse(); }
       }
-    } catch (e) { if (!S.closing) disconnect('グリッドとの接続が切れました'); }
+    } catch (e) { if (!S.closing) disconnect(T('hw.err.lost')); }
     finally { try { S.reader.releaseLock(); } catch (e) {} }
   }
 }
@@ -175,7 +175,7 @@ function applySize() {
   if (S.proto === '40h') { S.cols = 8; S.rows = 8; }
 }
 async function connect() {
-  if (!('serial' in navigator)) { emu().error('この機能は Chrome か Edge（パソコン版）で使えます'); return; }
+  if (!('serial' in navigator)) { emu().error(T('hw.err.browser')); return; }
   emu().resumeAudio();
   let port;
   try { port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x0403 }] }); }
@@ -188,7 +188,7 @@ async function open(port) {
   await disconnect();
   S.closing = false;
   try { await port.open({ baudRate: +cfg.baud || 115200, dataBits: 8, stopBits: 1, parity: 'none', bufferSize: 4096 }); }
-  catch (e) { emu().error('ポートを開けませんでした: ' + (e.message || e) + '（serialosc など、ほかのソフトが使っていないか確認してください）'); return; }
+  catch (e) { emu().error(T('hw.err.open', { e: e.message || e })); return; }
   S.port = port;
   S.writer = port.writable.getWriter();
   S.sent = null; rx = [];
@@ -202,7 +202,7 @@ async function open(port) {
   }
   applySize();
   updateStatus();
-  emu().log(`USB grid に接続しました（${protoLabel()} ${S.cols}×${S.rows}${info.usbProductId ? ', pid ' + info.usbProductId.toString(16) : ''}）`);
+  emu().log(T('hw.log.connected', { p: protoLabel(), c: S.cols, r: S.rows, pid: info.usbProductId ? ', pid ' + info.usbProductId.toString(16) : '' }));
   await setIntensity();
   S.lastFrame = new Uint8Array(emu().frame());
   schedule();
@@ -226,15 +226,15 @@ async function disconnect(msg) {
   updateStatus();
   if (msg) emu().error(msg);
 }
-if ('serial' in navigator) navigator.serial.addEventListener('disconnect', e => { if (e.target === S.port) disconnect('グリッドが取り外されました'); });
+if ('serial' in navigator) navigator.serial.addEventListener('disconnect', e => { if (e.target === S.port) disconnect(T('hw.err.removed')); });
 
 /* ---------- UI ---------- */
-const protoLabel = () => ({ mext: 'mext（2011年以降）', series: 'series（2007–2010）', '40h': '40h' })[S.proto] || '';
+const protoLabel = () => ({ mext: T('hw.proto.mext'), series: T('hw.proto.series.short'), '40h': '40h' })[S.proto] || '';
 function updateStatus() {
   const st = $('hwStatus'), btn = $('hwConnect');
   if (!st) return;
-  if (S.port) { st.textContent = `接続中: ${protoLabel()} ${S.cols}×${S.rows}`; st.className = 'hw-status on'; btn.textContent = '切断'; }
-  else { st.textContent = 'serial' in navigator ? '未接続' : 'Chrome / Edge（パソコン版）で使えます'; st.className = 'hw-status'; btn.textContent = 'USB grid に接続'; }
+  if (S.port) { st.textContent = T('hw.connected', { p: protoLabel(), c: S.cols, r: S.rows }); st.className = 'hw-status on'; btn.textContent = T('hw.disconnect'); }
+  else { st.textContent = T('serial' in navigator ? 'hw.idle' : 'hw.unsupported'); st.className = 'hw-status'; btn.textContent = T('hw.connect'); }
   btn.disabled = !('serial' in navigator);
 }
 function renderStrip() {
@@ -246,7 +246,7 @@ function renderStrip() {
     const s = stepOf(l);
     const p = previewLevel(l);
     c.style.setProperty('--a', String(p === 0 ? 0 : 0.15 + (p / 15) * 0.85));
-    c.title = cfg.mode === '16' ? `level ${l}` : `level ${l} → ${cfg.mode === '2' ? (s ? '点灯' : '消灯') : '段階 ' + s}`;
+    c.title = cfg.mode === '16' ? `level ${l}` : `level ${l} → ${cfg.mode === '2' ? T(s ? 'hw.cell.on' : 'hw.cell.off') : T('hw.cell.step', { n: s })}`;
     const n = document.createElement('span'); n.textContent = l;
     const m = document.createElement('b'); m.textContent = cfg.mode === '16' ? '' : (cfg.mode === '2' ? (s ? '●' : '·') : String(s));
     c.appendChild(n); c.appendChild(m);
@@ -295,8 +295,9 @@ function bind() {
   test.addEventListener('pointerup', end); test.addEventListener('pointerleave', end); test.addEventListener('pointercancel', end);
   $('hwReset').addEventListener('click', () => { cfg = { ...DEFAULTS, out: [...DEFAULTS.out] }; changed(true); setIntensity(); });
   syncInputs(); updateStatus();
+  if (window.I18N) window.I18N.onChange(() => { updateStatus(); renderStrip(); });
   // reconnect to a port the viewer already granted
-  if ('serial' in navigator && navigator.serial.getPorts) navigator.serial.getPorts().then(ps => { if (ps.length === 1) $('hwConnect').title = '前回のグリッドに接続'; });
+  if ('serial' in navigator && navigator.serial.getPorts) navigator.serial.getPorts().then(ps => { if (ps.length === 1) $('hwConnect').title = T('hw.prev'); });
 }
 
 window.NornsHW = {

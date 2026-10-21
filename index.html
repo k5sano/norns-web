@@ -38,6 +38,7 @@ body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size
 .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
 .top-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .manual-link{font-size:13px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 12px;background:var(--ground-2)}
+.lang-btn{cursor:pointer;line-height:1.5}
 .sound-btn{font-family:var(--f-mono);cursor:pointer;line-height:1.5}
 .sound-btn[aria-pressed="true"]{color:#111316;background:var(--ok);border-color:var(--ok)}
 .manual-link:hover{border-color:var(--line-2)}
@@ -194,9 +195,10 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
   <header class="top">
     <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · LUA 5.3 · SOFTCUT · CROW</span></div>
     <div class="top-right">
-      <div class="status" id="status"><i></i><span id="statusText">起動中</span></div>
+      <div class="status" id="status"><i></i><span id="statusText" data-i18n="status.boot">起動中</span></div>
+      <button class="manual-link lang-btn" id="langBtn" data-i18n="lang.toggle" data-i18n-title="lang.toggle.title">English</button>
       <button class="manual-link sound-btn" id="soundBtn" aria-pressed="false" title="クリックで音を出す">音 OFF</button>
-      <a class="manual-link" href="manual.html" target="_blank" rel="noopener">マニュアル</a>
+      <a class="manual-link" href="manual.html" data-manual="" target="_blank" rel="noopener" data-i18n="manual">マニュアル</a>
     </div>
   </header>
 
@@ -205,11 +207,11 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
       <div class="device">
         <div class="screen-well">
           <canvas id="oled" width="768" height="384" aria-label="norns 128×64 OLED"></canvas>
-          <div class="tag audio-hint" id="audioHint">クリック / タップで音が出ます</div>
+          <div class="tag audio-hint" id="audioHint" data-i18n="audio.hint">クリック / タップで音が出ます</div>
         </div>
         <div class="controls">
           <div class="ctl k1"><button class="key" data-k="1" aria-label="K1"></button><span>K1</span></div>
-          <div class="ctl mb"><button class="menubtn" id="menuBtn" aria-pressed="false" title="K1 短押しと同じ">MENU</button></div>
+          <div class="ctl mb"><button class="menubtn" id="menuBtn" aria-pressed="false" data-i18n-title="menu.title" title="K1 短押しと同じ">MENU</button></div>
           <div class="ctl e1"><div class="enc" data-e="1" tabindex="0" role="slider" aria-label="E1"><i></i></div><span>E1</span></div>
           <div class="ctl k2"><button class="key" data-k="2" aria-label="K2"></button><span>K2</span></div>
           <div class="ctl k3"><button class="key" data-k="3" aria-label="K3"></button><span>K3</span></div>
@@ -227,160 +229,161 @@ li.cat{display:flex;gap:12px;align-items:flex-start;justify-content:space-betwee
         <div class="devpanel" data-dev="grid">
           <canvas id="grid" aria-label="monome grid 16×8"></canvas>
           <div class="hw-bar">
-            <button id="hwConnect">USB grid に接続</button>
-            <span id="hwStatus" class="hw-status">未接続</span>
+            <button id="hwConnect" data-i18n="hw.connect">USB grid に接続</button>
+            <span id="hwStatus" class="hw-status" data-i18n="hw.idle">未接続</span>
           </div>
           <details class="hw" id="hwPanel">
-            <summary>実機グリッドの設定</summary>
+            <summary data-i18n="hw.panel">実機グリッドの設定</summary>
             <div class="hw-grid">
-              <label for="hwProto">プロトコル</label>
+              <label for="hwProto" data-i18n="hw.proto">プロトコル</label>
               <select id="hwProto">
-                <option value="auto">自動判別</option>
-                <option value="mext">mext（2011年以降）</option>
-                <option value="series">series（2007–2010 の 64 / 128 / 256）</option>
-                <option value="40h">40h（2006 / arduinome）</option>
+                <option value="auto" data-i18n="hw.proto.auto">自動判別</option>
+                <option value="mext" data-i18n="hw.proto.mext">mext（2011年以降）</option>
+                <option value="series" data-i18n="hw.proto.series">series（2007–2010 の 64 / 128 / 256）</option>
+                <option value="40h" data-i18n="hw.proto.40h">40h（2006 / arduinome）</option>
               </select>
-              <label for="hwSize">サイズ</label>
+              <label for="hwSize" data-i18n="hw.size">サイズ</label>
               <select id="hwSize">
-                <option value="auto">自動（mext のみ）</option>
-                <option value="64">64（8×8）</option>
-                <option value="128">128（16×8）</option>
-                <option value="256">256（16×16 の上半分を使用）</option>
+                <option value="auto" data-i18n="hw.size.auto">自動（mext のみ）</option>
+                <option value="64">64 (8×8)</option>
+                <option value="128">128 (16×8)</option>
+                <option value="256" data-i18n="hw.size.256">256（16×16 の上半分を使用）</option>
               </select>
-              <label for="hwBaud">通信速度</label>
+              <label for="hwBaud" data-i18n="hw.baud">通信速度</label>
               <select id="hwBaud">
-                <option value="115200">115200（monome 純正）</option>
-                <option value="57600">57600（arduinome）</option>
+                <option value="115200" data-i18n="hw.baud.monome">115200（monome 純正）</option>
+                <option value="57600">57600 (arduinome)</option>
               </select>
-              <label for="hwRot">向き</label>
+              <label for="hwRot" data-i18n="hw.rot">向き</label>
               <select id="hwRot">
-                <option value="0">そのまま</option>
-                <option value="180">180°回転（ケーブルが左）</option>
+                <option value="0" data-i18n="hw.rot.0">そのまま</option>
+                <option value="180" data-i18n="hw.rot.180">180°回転（ケーブルが左）</option>
               </select>
-              <label for="hwMode">階調</label>
+              <label for="hwMode" data-i18n="hw.mode">階調</label>
               <select id="hwMode">
-                <option value="16">16段階（varibright）</option>
-                <option value="4">4段階</option>
-                <option value="2">点灯 / 消灯のみ（初代・単色）</option>
+                <option value="16" data-i18n="hw.mode.16">16段階（varibright）</option>
+                <option value="4" data-i18n="hw.mode.4">4段階</option>
+                <option value="2" data-i18n="hw.mode.2">点灯 / 消灯のみ（初代・単色）</option>
               </select>
-              <label class="hw-2" for="hwMono">点灯するレベル</label>
-              <div class="hw-2 hw-range"><input type="range" id="hwMono" min="1" max="15" step="1"><output id="hwMonov"></output><small>以上で点灯</small></div>
-              <label class="hw-4" for="hwT1">段階1（暗）</label>
-              <div class="hw-4 hw-range"><input type="range" id="hwT1" min="1" max="15" step="1"><output id="hwT1v"></output><small>以上</small></div>
-              <label class="hw-4" for="hwT2">段階2（中）</label>
-              <div class="hw-4 hw-range"><input type="range" id="hwT2" min="1" max="15" step="1"><output id="hwT2v"></output><small>以上</small></div>
-              <label class="hw-4" for="hwT3">段階3（明）</label>
-              <div class="hw-4 hw-range"><input type="range" id="hwT3" min="1" max="15" step="1"><output id="hwT3v"></output><small>以上</small></div>
-              <label>対応表</label>
-              <div class="hw-strip" id="hwStrip" aria-label="スクリプトのレベル 0–15 と実機の点灯"></div>
-              <label class="hw-4" for="hwO1">送る値 1 / 2 / 3</label>
+              <label class="hw-2" for="hwMono" data-i18n="hw.mono">点灯するレベル</label>
+              <div class="hw-2 hw-range"><input type="range" id="hwMono" min="1" max="15" step="1"><output id="hwMonov"></output><small data-i18n="hw.mono.suffix">以上で点灯</small></div>
+              <label class="hw-4" for="hwT1" data-i18n="hw.t1">段階1（暗）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT1" min="1" max="15" step="1"><output id="hwT1v"></output><small data-i18n="hw.t.suffix">以上</small></div>
+              <label class="hw-4" for="hwT2" data-i18n="hw.t2">段階2（中）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT2" min="1" max="15" step="1"><output id="hwT2v"></output><small data-i18n="hw.t.suffix">以上</small></div>
+              <label class="hw-4" for="hwT3" data-i18n="hw.t3">段階3（明）</label>
+              <div class="hw-4 hw-range"><input type="range" id="hwT3" min="1" max="15" step="1"><output id="hwT3v"></output><small data-i18n="hw.t.suffix">以上</small></div>
+              <label data-i18n="hw.map">対応表</label>
+              <div class="hw-strip" id="hwStrip" data-i18n-aria-label="hw.map.aria" aria-label="スクリプトのレベル 0–15 と実機の点灯"></div>
+              <label class="hw-4" for="hwO1" data-i18n="hw.out">送る値 1 / 2 / 3</label>
               <div class="hw-4 hw-outs">
-                <input type="range" id="hwO1" min="1" max="15" step="1" aria-label="段階1で送る値"><output id="hwO1v"></output>
-                <input type="range" id="hwO2" min="1" max="15" step="1" aria-label="段階2で送る値"><output id="hwO2v"></output>
-                <input type="range" id="hwO3" min="1" max="15" step="1" aria-label="段階3で送る値"><output id="hwO3v"></output>
+                <input type="range" id="hwO1" min="1" max="15" step="1" data-i18n-aria-label="hw.out1.aria" aria-label="段階1で送る値"><output id="hwO1v"></output>
+                <input type="range" id="hwO2" min="1" max="15" step="1" data-i18n-aria-label="hw.out2.aria" aria-label="段階2で送る値"><output id="hwO2v"></output>
+                <input type="range" id="hwO3" min="1" max="15" step="1" data-i18n-aria-label="hw.out3.aria" aria-label="段階3で送る値"><output id="hwO3v"></output>
               </div>
-              <label for="hwBright">明るさ</label>
+              <label for="hwBright" data-i18n="hw.bright">明るさ</label>
               <div class="hw-range"><input type="range" id="hwBright" min="0" max="15" step="1"><output id="hwBrightv"></output><small></small></div>
               <span></span>
-              <label class="hw-check"><input type="checkbox" id="hwMirror"> 画面のグリッドも同じ階調で表示</label>
+              <label class="hw-check"><input type="checkbox" id="hwMirror"> <span data-i18n="hw.mirror">画面のグリッドも同じ階調で表示</span></label>
             </div>
             <div class="hw-actions">
-              <button id="hwTest" title="押している間、左から右へレベル 0〜15 を表示します">押している間テスト表示</button>
-              <button id="hwReset">初期設定に戻す</button>
+              <button id="hwTest" data-i18n="hw.test" data-i18n-title="hw.test.title" title="押している間、左から右へレベル 0〜15 を表示します">押している間テスト表示</button>
+              <button id="hwReset" data-i18n="hw.reset">初期設定に戻す</button>
             </div>
-            <p class="small">テスト表示では、左の列から順にレベル 0〜15 を出します。実機でどの列から光るかを見ながら、しきい値を合わせてください。serialosc など、ほかのソフトがグリッドを使っている間は接続できません。</p>
+            <p class="small" data-i18n="hw.note">テスト表示では、左の列から順にレベル 0〜15 を出します。実機でどの列から光るかを見ながら、しきい値を合わせてください。serialosc など、ほかのソフトがグリッドを使っている間は接続できません。</p>
           </details>
         </div>
         <div class="devpanel" data-dev="arc" hidden>
-          <canvas id="arc" aria-label="monome arc 4 リング"></canvas>
-          <p class="small">リングをなぞると a.delta、中央を押すと a.key。ホイールでも回せます。</p>
+          <canvas id="arc" data-i18n-aria-label="arc.aria" aria-label="monome arc 4 リング"></canvas>
+          <p class="small" data-i18n="arc.note">リングをなぞると a.delta、中央を押すと a.key。ホイールでも回せます。</p>
         </div>
         <div class="devpanel" data-dev="crow" hidden>
-          <canvas id="crow" aria-label="crow 出力電圧"></canvas>
+          <canvas id="crow" data-i18n-aria-label="crow.aria" aria-label="crow 出力電圧"></canvas>
           <div class="crow-ins">
             <div class="crow-row"><span>IN 1</span><input type="range" class="crow-in" id="crowIn1" data-in="1" min="-5" max="10" step="0.01" value="0" aria-label="crow input 1"><span class="crow-in-val" data-in="1">0.00 V</span><button class="crow-gate" data-in="1">5V</button></div>
             <div class="crow-row"><span>IN 2</span><input type="range" class="crow-in" id="crowIn2" data-in="2" min="-5" max="10" step="0.01" value="0" aria-label="crow input 2"><span class="crow-in-val" data-in="2">0.00 V</span><button class="crow-gate" data-in="2">5V</button></div>
           </div>
-          <label class="row small"><input type="checkbox" id="crowListen"> OUT 1 を V/oct、OUT 2 を VCA として音で聴く</label>
+          <label class="row small"><input type="checkbox" id="crowListen"> <span data-i18n="crow.listen">OUT 1 を V/oct、OUT 2 を VCA として音で聴く</span></label>
         </div>
       </div>
 
       <div class="row">
-        <label for="inputSrc">AUDIO IN（softcut の録音元）</label>
+        <label for="inputSrc" data-i18n="audioin.label">AUDIO IN（softcut の録音元）</label>
         <select id="inputSrc"></select>
       </div>
-      <p class="small hint">K1 短押しでシステムメニュー（MIX / HOME / PARAMETERS）。エンコーダーは上下ドラッグかホイール。キーボード: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> = K1–K3、<kbd>Q</kbd><kbd>W</kbd> = E1、<kbd>A</kbd><kbd>S</kbd> = E2、<kbd>Z</kbd><kbd>X</kbd> = E3。</p>
+      <p class="small hint" data-i18n-html="hint.keys">K1 短押しでシステムメニュー（MIX / HOME / PARAMETERS）。エンコーダーは上下ドラッグかホイール。キーボード: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> = K1–K3、<kbd>Q</kbd><kbd>W</kbd> = E1、<kbd>A</kbd><kbd>S</kbd> = E2、<kbd>Z</kbd><kbd>X</kbd> = E3。</p>
     </section>
 
     <section class="side">
       <div class="tabs" role="tablist">
-        <button class="viewtab" data-view="editor" role="tab" aria-selected="true">エディタ</button>
-        <button class="viewtab" data-view="library" role="tab" aria-selected="false">ライブラリ</button>
+        <button class="viewtab" data-view="editor" role="tab" aria-selected="true" data-i18n="tab.editor">エディタ</button>
+        <button class="viewtab" data-view="library" role="tab" aria-selected="false" data-i18n="tab.library">ライブラリ</button>
       </div>
 
       <div class="view" data-view="editor" id="editorView">
         <div class="toolbar">
-          <select id="file" aria-label="ファイル"></select>
-          <button id="run" class="primary" title="Ctrl / ⌘ + Enter">▶ 実行</button>
-          <button id="stop">■ 停止</button>
-          <button id="newScript">＋ 新規</button>
-          <button id="revert" hidden>元に戻す</button>
+          <select id="file" data-i18n-aria-label="ed.file" aria-label="ファイル"></select>
+          <button id="run" class="primary" title="Ctrl / ⌘ + Enter" data-i18n="ed.run">▶ 実行</button>
+          <button id="stop" data-i18n="ed.stop">■ 停止</button>
+          <button id="newScript" data-i18n="ed.new">＋ 新規</button>
+          <button id="revert" hidden data-i18n="ed.revert">元に戻す</button>
         </div>
-        <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Lua スクリプト"></textarea>
+        <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" data-i18n-aria-label="ed.src" aria-label="Lua スクリプト"></textarea>
         <div class="console">
-          <div class="conhead"><span>MATRON</span><button id="clr">クリア</button></div>
+          <div class="conhead"><span>MATRON</span><button id="clr" data-i18n="con.clear">クリア</button></div>
           <pre id="log" aria-live="polite"></pre>
-          <div class="repl"><b>&gt;&gt;</b><input id="repl" type="text" placeholder="Lua を1行入力して Enter（例: engine.hz(440)）" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <div class="repl"><b>&gt;&gt;</b><input id="repl" type="text" data-i18n-placeholder="repl.ph" placeholder="Lua を1行入力して Enter（例: engine.hz(440)）" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <details class="api">
-          <summary>対応している norns API（詳しくは<a href="manual.html#compat" target="_blank" rel="noopener">マニュアル</a>）</summary>
+          <summary data-i18n-html="api.summary">対応している norns API（詳しくは<a href="manual.html#compat" target="_blank" rel="noopener">マニュアル</a>）</summary>
           <dl>
             <dt>screen</dt><dd>clear update level move line rect circle arc curve stroke fill pixel text text_right text_center text_rotate text_extents font_size font_face line_width blend_mode display_png peek …</dd>
-            <dt>softcut</dt><dd>6ボイス・2バッファ（各約87秒）。rate / loop / fade / rec・pre / post filter / level_cut_cut / phase poll / render_buffer / buffer_read・write</dd>
-            <dt>crow</dt><dd>output.volts / slew / action（to, loop, times, held, dyn, lfo, ar, adsr, pulse …）· input.mode stream / change</dd>
-            <dt>clock · metro</dt><dd>clock.run / sleep / sync / cancel · metro.init · poll（amp_in / amp_out）</dd>
-            <dt>params</dt><dd>number option control taper binary trigger text file separator group · pset の読み書き</dd>
+            <dt>softcut</dt><dd data-i18n="api.softcut">6ボイス・2バッファ（各約87秒）。rate / loop / fade / rec・pre / post filter / level_cut_cut / phase poll / render_buffer / buffer_read・write</dd>
+            <dt>crow</dt><dd data-i18n="api.crow">output.volts / slew / action（to, loop, times, held, dyn, lfo, ar, adsr, pulse …）· input.mode stream / change</dd>
+            <dt>clock · metro</dt><dd data-i18n="api.clock">clock.run / sleep / sync / cancel · metro.init · poll（amp_in / amp_out）</dd>
+            <dt>params</dt><dd data-i18n="api.params">number option control taper binary trigger text file separator group · pset の読み書き</dd>
             <dt>lib</dt><dd>util tabutil controlspec musicutil sequins lattice er formatters ui pattern_time beatclock fileselect textentry listselect intonation</dd>
-            <dt>engine</dt><dd>PolyPerc · TestSine · PolySub（簡易）· MollyThePoly（簡易）。ほかのエンジンは音名系コマンドを代替音で鳴らします</dd>
+            <dt>engine</dt><dd data-i18n="api.engine">PolyPerc · TestSine · PolySub（簡易）· MollyThePoly（簡易）。ほかのエンジンは音名系コマンドを代替音で鳴らします</dd>
             <dt>grid · arc</dt><dd>g:led all refresh · g.key · a:led all segment refresh · a.delta a.key</dd>
           </dl>
-          <p>include / require は dust/code 内のファイルとコアライブラリを読み込みます。midi と crow.ii は無視されます。ファイルはこのブラウザ内（IndexedDB）に保存されます。</p>
+          <p data-i18n="api.note">include / require は dust/code 内のファイルとコアライブラリを読み込みます。midi と crow.ii は無視されます。ファイルはこのブラウザ内（IndexedDB）に保存されます。</p>
         </details>
       </div>
 
       <div class="view" data-view="library" id="libraryView" hidden>
         <div class="drop" id="drop" role="button" tabindex="0">
-          <strong>ZIP・.lua・音声・.png をここにドロップ</strong>
-          <span>カタログにないスクリプトは ZIP や .lua をここに。音声は dust/audio/ に入ります。</span>
+          <strong data-i18n="lib.drop">ZIP・.lua・音声・.png をここにドロップ</strong>
+          <span data-i18n="lib.drop.sub">カタログにないスクリプトは ZIP や .lua をここに。音声は dust/audio/ に入ります。</span>
         </div>
         <input type="file" id="picker" multiple hidden accept=".zip,.lua,.wav,.aif,.aiff,.flac,.mp3,.ogg,.opus,.m4a,.png">
 
-        <h3><span>インストール済み · dust/code</span></h3>
+        <h3><span data-i18n="lib.installed">インストール済み · dust/code</span></h3>
         <ul class="list" id="installed"></ul>
 
-        <h3><span>音声と画像 · dust</span></h3>
+        <h3><span data-i18n="lib.audio">音声と画像 · dust</span></h3>
         <ul class="list" id="audioFiles"></ul>
 
-        <h3><span>norns.community カタログ</span><span id="catCount"></span></h3>
+        <h3><span data-i18n="lib.catalog">norns.community カタログ</span><span id="catCount"></span></h3>
         <div class="catbar">
-          <input type="search" id="catSearch" placeholder="名前・作者・タグで検索" aria-label="カタログ検索">
-          <select id="catFilter" aria-label="絞り込み">
-            <option value="all">すべて</option>
-            <option value="ok">起動確認済み</option>
-            <option value="engine">対応エンジンのみ</option>
+          <input type="search" id="catSearch" data-i18n-placeholder="lib.search" data-i18n-aria-label="lib.search.aria" placeholder="名前・作者・タグで検索" aria-label="カタログ検索">
+          <select id="catFilter" data-i18n-aria-label="lib.filter.aria" aria-label="絞り込み">
+            <option value="all" data-i18n="lib.f.all">すべて</option>
+            <option value="ok" data-i18n="lib.f.ok">起動確認済み</option>
+            <option value="engine" data-i18n="lib.f.engine">対応エンジンのみ</option>
             <option value="softcut">softcut</option>
             <option value="grid">grid</option>
             <option value="arc">arc</option>
             <option value="crow">crow</option>
           </select>
         </div>
-        <p class="small">「インストール」で GitHub から直接このブラウザに取り込みます（git submodule も含む）。入れたファイルはこのブラウザ内にだけ保存されます。</p>
+        <p class="small" data-i18n="lib.note">「インストール」で GitHub から直接このブラウザに取り込みます（git submodule も含む）。入れたファイルはこのブラウザ内にだけ保存されます。</p>
         <ul class="list" id="catalog"></ul>
       </div>
     </section>
   </main>
 </div>
 
+<script src="norns/i18n.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="norns/softcut.js"></script>

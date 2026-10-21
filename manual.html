@@ -34,6 +34,7 @@ header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-be
 .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .logo{font-family:var(--f-mono);font-weight:500;font-size:26px;letter-spacing:.02em}
 .sub{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em}
+.hdr-links{display:flex;gap:8px;flex-wrap:wrap}
 .back{font-family:var(--f-mono);font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;color:var(--ink);background:var(--ground-2)}
 .back:hover{border-color:#44474c}
 .layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px;align-items:start}
@@ -85,7 +86,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font
 <div class="wrap">
   <header>
     <div class="brand"><span class="logo">norns</span><span class="sub">WEB EMULATOR · MANUAL</span></div>
-    <a class="back" href="./">← エミュレータに戻る</a>
+    <div class="hdr-links"><a class="back" href="manual-en.html" lang="en">English</a><a class="back" href="./">← エミュレータに戻る</a></div>
   </header>
 
   <div class="layout">
@@ -118,7 +119,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font
           <li>画面のどこかを一度クリックすると音が出ます。ブラウザの決まりで、操作するまでは無音です。右上のボタンが「音 ON」（緑）なら出力中です。</li>
           <li>右の「ライブラリ」タブから、norns.community のスクリプトを選んで「インストール」を押すと、取り込んですぐ起動します。</li>
         </ol>
-        <p>パソコンの Chrome / Edge / Safari / Firefox で動きます。スマホでも動きますが、エンコーダーやグリッドの操作はパソコンの方が快適です。実機グリッドの接続はパソコン版の Chrome と Edge だけです。</p>
+        <p>パソコンの Chrome / Edge / Safari / Firefox で動きます。スマホでも動きますが、エンコーダーやグリッドの操作はパソコンの方が快適です。実機グリッドの接続はパソコン版の Chrome と Edge だけです。右上の「English / 日本語」ボタンで表示する言語を切り替えられます。</p>
       </section>
 
       <section id="screen">

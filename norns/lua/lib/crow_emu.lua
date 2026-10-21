@@ -4,7 +4,7 @@ local now = 0
 local function report(e) __report(tostring(e)) end
 local function safe(f, ...) if type(f) ~= 'function' then return end local ok, e = pcall(f, ...) if not ok then report(e) end end
 local warned = {}
-local function warn(k, msg) if not warned[k] then warned[k] = true; __sys(msg or ('crow: ' .. k .. ' は未実装のため無視されます')) end end
+local function warn(k, msg) if not warned[k] then warned[k] = true; __sys(msg or __tr('crow: ' .. k .. ' は未実装のため無視されます', 'crow: ' .. k .. ' is not implemented and is ignored')) end end
 
 -- shapes ----------------------------------------------------------------------------
 local function bounce(x)
@@ -223,7 +223,7 @@ local function make_input(n)
       s.thr = tonumber(a) or 1; s.hyst = tonumber(b) or 0.1; s.dir = tostring(c or 'both')
       s.state = s.v > s.thr
     elseif m ~= 'none' then
-      warn('input mode ' .. m, 'crow: input mode \'' .. m .. '\' は stream として扱います')
+      warn('input mode ' .. m, __tr('crow: input mode \'' .. m .. '\' は stream として扱います', 'crow: input mode \'' .. m .. '\' is treated as stream'))
       s.mode = 'stream'; s.interval = 0.1
     end
   end
@@ -306,11 +306,11 @@ function crow.reset()
 end
 crow.clear = crow.reset
 crow.init = function() end
-function crow.send(s) warn('send', 'crow.send(...) で送る crow 側スクリプトは実行されません') end
-function crow.loadscript(name) warn('loadscript', 'crow.loadscript(' .. tostring(name) .. ') の crow 側スクリプトは実行されません') end
+function crow.send(s) warn('send', __tr('crow.send(...) で送る crow 側スクリプトは実行されません', 'scripts sent with crow.send(...) do not run on the emulated crow')) end
+function crow.loadscript(name) warn('loadscript', __tr('crow.loadscript(' .. tostring(name) .. ') の crow 側スクリプトは実行されません', 'crow.loadscript(' .. tostring(name) .. '): crow-side scripts do not run')) end
 crow.version = function() return 'web' end
 crow.ii = setmetatable({}, { __index = function(t, k)
-  warn('ii', 'crow.ii (i2c 機器) はエミュレートされず、呼び出しは無視されます')
+  warn('ii', __tr('crow.ii (i2c 機器) はエミュレートされず、呼び出しは無視されます', 'crow.ii (i2c devices) is not emulated; calls are ignored'))
   local dev
   dev = setmetatable({}, { __index = function() return dev end, __call = function() end, __newindex = function() end })
   return dev

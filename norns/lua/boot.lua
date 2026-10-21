@@ -12,8 +12,9 @@ local function safe(f, ...)
 end
 local function safe_global(name, ...) return safe(rawget(_G, name), ...) end
 local warned = {}
+function __tr(ja, en) local ok, l = pcall(__lang); if ok and l == 'en' then return en end return ja end
 local function warn_once(key, msg)
-  if not warned[key] then warned[key] = true; __sys(msg or (key .. ' は未実装のため無視されます')) end
+  if not warned[key] then warned[key] = true; __sys(msg or __tr(key .. ' は未実装のため無視されます', key .. ' is not implemented and is ignored')) end
 end
 local function stub(name)
   local mt = {}
@@ -136,7 +137,7 @@ function io.write(...)
 end
 function io.read(...) if cur_in then return cur_in:read(...) end return nil end
 function io.popen(cmd)
-  warn_once('io.popen', 'os コマンド (' .. tostring(cmd):sub(1, 40) .. ') は実行できません')
+  warn_once('io.popen', __tr('os コマンド (' .. tostring(cmd):sub(1, 40) .. ') は実行できません', 'cannot run OS commands (' .. tostring(cmd):sub(1, 40) .. ')'))
   return setmetatable({ buf = '', pos = 1, path = '' }, File)
 end
 function io.close(f) f = f or cur_out; if f then f:close() end if f == cur_out then cur_out = nil end end
@@ -250,9 +251,9 @@ function include(file)
   if p then return dofile(p) end
   local proj = file:match('^([^/]+)/')
   if proj and proj ~= '..' and not __fs_exists(_path.code .. proj) then
-    error('include: ' .. file .. ' が見つかりません — 別プロジェクト「' .. proj .. '」が必要です（ライブラリから入れてください）', 2)
+    error(__tr('include: ' .. file .. ' が見つかりません — 別プロジェクト「' .. proj .. '」が必要です（ライブラリから入れてください）', 'include: ' .. file .. ' not found — it needs the project "' .. proj .. '" (install it from the Library)'), 2)
   end
-  error('include: ' .. file .. ' が見つかりません（git submodule のファイルは GitHub の ZIP に含まれません）', 2)
+  error(__tr('include: ' .. file .. ' が見つかりません（git submodule のファイルは GitHub の ZIP に含まれません）', 'include: ' .. file .. ' not found (git submodule files are not included in GitHub ZIP downloads)'), 2)
 end
 
 -- core libraries as globals ----------------------------------------------------
@@ -372,7 +373,7 @@ local function resume(id)
   end
 end
 function clock.run(f, ...)
-  if type(f) ~= 'function' then error('clock.run には関数を渡してください', 2) end
+  if type(f) ~= 'function' then error(__tr('clock.run には関数を渡してください', 'clock.run expects a function'), 2) end
   local args = table.pack(...)
   cid = cid + 1
   local id = cid
